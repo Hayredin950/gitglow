@@ -85,8 +85,9 @@ function DeployContent() {
               }
 
               if (payload.type === "error") {
-                addLog(`❌ ${payload.message ?? "Error"}`, "error");
-                setError(payload.message ?? "Deploy failed");
+                const errorMsg = payload.message ?? "Deploy failed";
+                addLog(`❌ ${errorMsg}`, "error");
+                setError(errorMsg);
                 return;
               }
 

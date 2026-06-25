@@ -46,11 +46,46 @@ Return valid JSON only.`,
   const jsonMatch = text.match(/```(?:json)?\s*([\s\S]+?)\s*```/) ?? null;
   const jsonStr = jsonMatch ? jsonMatch[1] : text;
 
+  let project: GeneratedProject;
   try {
-    return JSON.parse(jsonStr) as GeneratedProject;
+    project = JSON.parse(jsonStr) as GeneratedProject;
   } catch {
     throw new Error(`Failed to parse project JSON: ${jsonStr.slice(0, 200)}`);
   }
+
+  // Validate project structure
+  if (!project.name || typeof project.name !== "string") {
+    throw new Error("Invalid project: missing or invalid 'name' field");
+  }
+  if (!project.description || typeof project.description !== "string") {
+    throw new Error("Invalid project: missing or invalid 'description' field");
+  }
+  if (!project.files || typeof project.files !== "object") {
+    throw new Error("Invalid project: missing 'files' object");
+  }
+
+  // Validate file paths and sanitize
+  const validFiles: Record<string, string> = {};
+  for (const [path, content] of Object.entries(project.files)) {
+    if (!path || typeof path !== "string" || path.trim() === "") {
+      console.warn("[v0] Skipping file with invalid path");
+      continue;
+    }
+    if (typeof content !== "string") {
+      console.warn(`[v0] Skipping file ${path} with non-string content`);
+      continue;
+    }
+    validFiles[path] = content;
+  }
+
+  if (Object.keys(validFiles).length === 0) {
+    throw new Error("Project has no valid files");
+  }
+
+  project.files = validFiles;
+  project.topics = Array.isArray(project.topics) ? project.topics : [];
+
+  return project;
 }
 
 export function inferProjectFromSkills(
