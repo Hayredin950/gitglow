@@ -37,6 +37,7 @@ export default function IntakePage() {
     goal: "job",
   });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const totalSteps = 5;
   const progress = ((step + 1) / totalSteps) * 100;
@@ -56,16 +57,43 @@ export default function IntakePage() {
 
   async function handleSubmit() {
     setSaving(true);
+    setError(null);
     try {
+      console.log("[v0] Submitting intake form with data:", intake);
       const res = await fetch("/api/polish/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ intake }),
       });
-      const data = await res.json() as { polishId: string };
+      
+      console.log("[v0] API response status:", res.status);
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        const errorMsg = errorData.error || `API error: ${res.status}`;
+        console.error("[v0] API error:", errorMsg);
+        setError(errorMsg);
+        setSaving(false);
+        return;
+      }
+      
+      const data = await res.json() as { polishId?: string };
+      console.log("[v0] API response data:", data);
+      
+      if (!data.polishId) {
+        console.error("[v0] No polishId in response");
+        setError("Failed to create profile - no ID returned");
+        setSaving(false);
+        return;
+      }
+      
       sessionStorage.setItem("intake", JSON.stringify(intake));
+      console.log("[v0] Redirecting to preview with polishId:", data.polishId);
       router.push(`/preview?polishId=${data.polishId}`);
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.error("[v0] Submit error:", msg, err);
+      setError(msg);
       setSaving(false);
     }
   }
@@ -192,6 +220,20 @@ export default function IntakePage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
       <div className="w-full max-w-lg">
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6 p-4 rounded-lg bg-red-600/20 border border-red-600/50 text-red-300 text-sm">
+            <div className="font-medium mb-1">Error</div>
+            <div>{error}</div>
+            <button
+              onClick={() => setError(null)}
+              className="mt-2 text-xs text-red-300 hover:text-red-200 underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {/* Progress */}
         <div className="mb-8">
           <div className="flex justify-between text-xs text-zinc-500 mb-2">
