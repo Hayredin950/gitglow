@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { Sparkles, Code2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -73,13 +73,13 @@ export default function LoginPage() {
             </div>
           )}
 
-          <a
-            href="/api/auth/signin/github?callbackUrl=%2Fanalyze"
+          <button
+            onClick={() => signIn("github", { callbackUrl: "/analyze" })}
             className="w-full flex items-center justify-center gap-3 rounded-xl bg-zinc-100 hover:bg-white text-zinc-900 px-6 py-4 font-semibold transition-colors text-base"
           >
             <Code2 className="h-5 w-5" />
             Continue with GitHub
-          </a>
+          </button>
 
           <div className="mt-8 text-left space-y-3">
             {PERKS.map((p) => (
