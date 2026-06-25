@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { getProfile, getRepositories, hasProfileReadme } from "@/lib/github/profile";
 import { calculatePolishScore, identifyWeaknesses } from "@/lib/analysis/scorer";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   const session = await auth();
   if (!session?.user) return Response.json({ error: "Unauthorized" }, { status: 401 });

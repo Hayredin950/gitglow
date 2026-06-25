@@ -5,6 +5,7 @@ import { validateTokenScopes, checkScopesForDeploy } from "@/lib/github/validate
 import type { GeneratedProject, CommitPlan } from "@/types/polish";
 // CommitPlan is also re-exported from generators/commits for convenience
 
+export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 export async function POST(req: Request) {
