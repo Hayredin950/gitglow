@@ -49,7 +49,7 @@ export function Header() {
             </span>
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="flex items-center gap-1.5 rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-100 hover:border-zinc-600 transition-colors"
+              className="btn-ghost flex items-center gap-1.5 rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-100 transition-all"
             >
               <LogOut className="h-3.5 w-3.5" />
               Sign out

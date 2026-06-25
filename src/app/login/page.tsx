@@ -95,7 +95,7 @@ function LoginContent() {
                 signIn("github", { callbackUrl: "/analyze" });
               }
             }}
-            className="w-full flex items-center justify-center gap-3 rounded-xl bg-zinc-100 hover:bg-white text-zinc-900 px-6 py-4 font-semibold transition-colors text-base"
+            className="btn-primary w-full flex items-center justify-center gap-3 rounded-xl bg-zinc-100 hover:bg-white text-zinc-900 px-6 py-4 font-semibold transition-all text-base"
           >
             <Code2 className="h-5 w-5" />
             Continue with GitHub

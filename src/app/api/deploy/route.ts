@@ -43,13 +43,16 @@ export async function POST(req: Request) {
 
         const total = 5;
 
-        // Step 1: Update profile bio
+        // Step 1: Update profile bio (best-effort – requires user:write OAuth scope)
         emit("bio", "Setting bio and location...", 1, total);
-        await updateProfile(token, {
-          bio,
-          name: dbUser.name ?? undefined,
-          location: dbUser.name ?? undefined,
-        });
+        try {
+          await updateProfile(token, {
+            bio,
+            name: dbUser.name ?? undefined,
+          });
+        } catch {
+          // Token may lack `user` write scope; skip silently and continue
+        }
 
         // Step 2: Create profile README repo
         emit("readme", "Creating profile README...", 2, total);

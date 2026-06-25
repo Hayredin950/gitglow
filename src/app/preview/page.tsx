@@ -138,7 +138,7 @@ function PreviewContent() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               onClick={handleDeploy}
-              className="flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-6 py-3 font-semibold transition-colors shadow-lg shadow-blue-600/20"
+              className="btn-primary flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-6 py-3 font-semibold transition-all shadow-lg shadow-blue-600/20"
             >
               <Send className="h-4 w-4" />
               Deploy to GitHub
@@ -247,7 +247,7 @@ function PreviewContent() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 text-center">
             <button
               onClick={handleDeploy}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-10 py-4 font-semibold transition-all shadow-lg shadow-blue-600/20 text-lg"
+              className="btn-primary inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-10 py-4 font-semibold transition-all shadow-lg shadow-blue-600/20 text-lg"
             >
               <Send className="h-5 w-5" />
               Deploy Everything to GitHub

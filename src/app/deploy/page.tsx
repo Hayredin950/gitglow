@@ -177,7 +177,7 @@ function DeployContent() {
             >
               <button
                 onClick={() => router.push(`/complete?polishId=${polishId}`)}
-                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-10 py-4 font-semibold transition-all text-lg shadow-lg shadow-blue-600/20"
+                className="btn-primary inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-10 py-4 font-semibold transition-all text-lg shadow-lg shadow-blue-600/20"
               >
                 See Your Results
                 <Sparkles className="h-5 w-5" />
@@ -189,7 +189,7 @@ function DeployContent() {
             <div className="text-center">
               <button
                 onClick={() => router.push(`/preview?polishId=${polishId}`)}
-                className="rounded-lg border border-zinc-700 px-6 py-3 text-sm font-medium hover:border-zinc-500 transition-colors"
+                className="btn-ghost rounded-lg border border-zinc-700 px-6 py-3 text-sm font-medium transition-all"
               >
                 Go back to preview
               </button>

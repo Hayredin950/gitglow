@@ -107,7 +107,7 @@ export default function AnalyzePage() {
           <AlertCircle className="h-10 w-10 text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Analysis failed</h2>
           <p className="text-zinc-400 text-sm mb-6">{error}</p>
-          <button onClick={() => { setError(null); setLoading(true); }} className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium">
+          <button onClick={() => { setError(null); setLoading(true); }} className="btn-primary rounded-lg bg-blue-600 hover:bg-blue-500 px-6 py-2.5 text-sm font-medium transition-all">
             Retry
           </button>
         </div>
@@ -189,7 +189,7 @@ export default function AnalyzePage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }} className="text-center">
           <button
             onClick={() => router.push("/intake")}
-            className="group inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-10 py-4 font-semibold transition-all shadow-lg shadow-blue-600/20"
+            className="btn-primary group inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-10 py-4 font-semibold transition-all shadow-lg shadow-blue-600/20"
           >
             Fix All of This
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />

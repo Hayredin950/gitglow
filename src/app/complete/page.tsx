@@ -114,7 +114,7 @@ function CompleteContent() {
               href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-xl bg-[#1DA1F2] hover:bg-[#1a8cd8] px-6 py-3 text-sm font-semibold transition-colors"
+              className="btn-primary flex items-center justify-center gap-2 rounded-xl bg-[#1DA1F2] hover:bg-[#1a8cd8] px-6 py-3 text-sm font-semibold transition-all"
             >
               <Share2 className="h-4 w-4" />
               Share on Twitter
@@ -123,14 +123,14 @@ function CompleteContent() {
               href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://gitglow.dev")}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-xl bg-[#0077b5] hover:bg-[#006399] px-6 py-3 text-sm font-semibold transition-colors"
+              className="btn-primary flex items-center justify-center gap-2 rounded-xl bg-[#0077b5] hover:bg-[#006399] px-6 py-3 text-sm font-semibold transition-all"
             >
               <Share2 className="h-4 w-4" />
               Share on LinkedIn
             </a>
             <button
               onClick={copyLink}
-              className="flex items-center justify-center gap-2 rounded-xl border border-zinc-700 hover:border-zinc-500 px-6 py-3 text-sm font-medium transition-colors"
+              className="btn-ghost flex items-center justify-center gap-2 rounded-xl border border-zinc-700 px-6 py-3 text-sm font-medium transition-all"
             >
               {copied ? <CheckCheck className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
               {copied ? "Copied!" : "Copy link"}

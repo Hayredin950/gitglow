@@ -34,6 +34,85 @@ body {
   color: var(--foreground);
 }
 
+/* ─── Global interactive element polish ──────────────────────────────────── */
+
+/* Every clickable surface gets a pointer cursor and prevents text selection */
+button,
+a,
+[role="button"] {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Disabled buttons revert to the default (not-allowed) cursor */
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/*
+ * Subtle press-down effect for ALL buttons.
+ * Intentionally light (scale 0.97) so it doesn't fight framer-motion animations.
+ * The will-change hint tells the GPU to composite ahead of time.
+ */
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active {
+  transform: scale(0.97);
+  will-change: transform;
+}
+
+/* Keyboard-accessible focus ring on every interactive element */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* ─── Reusable button class utilities ────────────────────────────────────── */
+
+/*
+ * .btn-primary  — blue filled CTA (used across analyze, preview, deploy, etc.)
+ * Adds a brighter hover + a glowing shadow lift so state change is obvious.
+ */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  transition: background-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0);
+  transition: background 150ms ease;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.btn-primary:not(:disabled):hover::after {
+  background: rgba(255, 255, 255, 0.08);
+}
+.btn-primary:not(:disabled):hover {
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.4), 0 8px 24px rgba(59, 130, 246, 0.35);
+}
+
+/*
+ * .btn-ghost  — bordered/outline buttons (e.g. "Back", "Go back to preview")
+ * Brightens the border and adds a faint background fill on hover.
+ */
+.btn-ghost {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.btn-ghost:not(:disabled):hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: #52525b !important; /* zinc-600 */
+  color: #e4e4e7;                   /* zinc-200 */
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+
 @keyframes gradient-x {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }

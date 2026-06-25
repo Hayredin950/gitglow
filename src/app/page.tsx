@@ -71,7 +71,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/login"
-              className="group flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-8 py-4 text-base font-semibold transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-500/30"
+              className="btn-primary group flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-8 py-4 text-base font-semibold transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-500/30"
             >
               <Code2 className="h-5 w-5" />
               Polish My GitHub — It&apos;s Free
@@ -79,7 +79,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/gallery"
-              className="flex items-center justify-center gap-2 rounded-xl border border-zinc-700 hover:border-zinc-500 px-8 py-4 text-base font-medium transition-colors"
+              className="btn-ghost flex items-center justify-center gap-2 rounded-xl border border-zinc-700 px-8 py-4 text-base font-medium transition-all"
             >
               <Star className="h-4 w-4 text-amber-400" />
               See transformations
@@ -181,7 +181,7 @@ export default function LandingPage() {
           <Sparkles className="h-10 w-10 text-blue-400 mx-auto mb-6" />
           <h2 className="text-3xl font-bold mb-4">Ready for your glow-up?</h2>
           <p className="text-zinc-400 mb-8">Join thousands of developers who upgraded their GitHub profile.</p>
-          <Link href="/login" className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-10 py-4 text-base font-semibold transition-all shadow-lg shadow-blue-600/20">
+          <Link href="/login" className="btn-primary inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-10 py-4 text-base font-semibold transition-all shadow-lg shadow-blue-600/20">
             <Code2 className="h-5 w-5" />
             Polish My GitHub — Free
           </Link>

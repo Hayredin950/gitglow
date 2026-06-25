@@ -219,7 +219,7 @@ export default function IntakePage() {
           <button
             onClick={prevStep}
             disabled={step === 0}
-            className="flex items-center gap-2 rounded-lg border border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-200 disabled:opacity-30 transition-colors"
+            className="btn-ghost flex items-center gap-2 rounded-lg border border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-200 disabled:opacity-30 transition-all"
           >
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -229,7 +229,7 @@ export default function IntakePage() {
             <button
               onClick={nextStep}
               disabled={!canNext}
-              className="flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 px-6 py-2.5 text-sm font-semibold transition-colors"
+              className="btn-primary flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 px-6 py-2.5 text-sm font-semibold transition-all"
             >
               Next
               <ArrowRight className="h-4 w-4" />
@@ -238,7 +238,7 @@ export default function IntakePage() {
             <button
               onClick={handleSubmit}
               disabled={saving}
-              className="flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 px-8 py-3 font-semibold transition-colors"
+              className="btn-primary flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 px-8 py-3 font-semibold transition-all"
             >
               {saving ? "Starting..." : "Generate My Profile"}
               <ArrowRight className="h-4 w-4" />
