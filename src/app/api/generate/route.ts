@@ -69,12 +69,33 @@ export async function POST(req: Request) {
         // Phase 4: Generate project
         emit("status", { message: "Generating your project repository..." });
         const spec = inferProjectFromSkills(intake.skills, intake.projectIdea);
-        const project = await generateProject(spec, intake.fullName);
+        console.log("[v0] Project spec:", spec);
+        let project: GeneratedProject | null = null;
+        try {
+          project = await generateProject(spec, intake.fullName);
+          console.log("[v0] Generated project:", project?.name, "with", Object.keys(project?.files ?? {}).length, "files");
+        } catch (projErr) {
+          const projMsg = projErr instanceof Error ? projErr.message : "Project generation failed";
+          console.error("[v0] Project generation error:", projMsg);
+          emit("status", { message: `Project generation skipped (${projMsg})` });
+          project = null;
+        }
         emit("project_complete", { project });
 
         // Phase 5: Plan commits
         emit("status", { message: "Planning contribution history..." });
-        const commitPlan = generateCommitSchedule([project as GeneratedProject], 180);
+        let commitPlan: CommitPlan[] = [];
+        try {
+          if (project) {
+            commitPlan = generateCommitSchedule([project], 180);
+            console.log("[v0] Generated", commitPlan.length, "commits");
+          } else {
+            console.log("[v0] No project, skipping commit generation");
+          }
+        } catch (commitErr) {
+          const commitMsg = commitErr instanceof Error ? commitErr.message : "Commit planning failed";
+          console.error("[v0] Commit planning error:", commitMsg);
+        }
         emit("commits_planned", { count: commitPlan.length, plan: commitPlan });
 
         // Save to DB
