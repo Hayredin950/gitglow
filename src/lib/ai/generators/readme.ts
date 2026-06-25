@@ -73,10 +73,14 @@ export async function* streamProfileReadme(
   const username = profile.login;
   const skillsStr = skills.join(", ");
 
+  if (!username || !fullName) {
+    throw new Error("Invalid profile data: missing username or fullName");
+  }
+
   const stream = await anthropic.messages.stream({
     model: "claude-sonnet-4-5",
     max_tokens: 4096,
-    system: `You are an expert GitHub profile designer. Generate stunning profile READMEs that get developers hired. Output ONLY raw markdown.`,
+    system: `You are an expert GitHub profile designer. Generate stunning profile READMEs that get developers hired. Output ONLY raw markdown, no explanations.`,
     messages: [
       {
         role: "user",
@@ -85,12 +89,18 @@ export async function* streamProfileReadme(
     ],
   });
 
+  let contentGenerated = false;
   for await (const chunk of stream) {
     if (
       chunk.type === "content_block_delta" &&
       chunk.delta.type === "text_delta"
     ) {
+      contentGenerated = true;
       yield chunk.delta.text;
     }
+  }
+
+  if (!contentGenerated) {
+    throw new Error("README generation failed: no content produced");
   }
 }

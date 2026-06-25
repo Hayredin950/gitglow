@@ -73,6 +73,7 @@ model Polish {
   shareCardUrl    String?
   shareToken      String?      @unique
   isPublic        Boolean      @default(false)
+  errorMessage    String?      @db.Text
   createdAt       DateTime     @default(now())
   completedAt     DateTime?
 }
