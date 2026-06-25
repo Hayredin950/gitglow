@@ -63,6 +63,7 @@ export default function IntakePage() {
         body: JSON.stringify({ intake }),
       });
       const data = await res.json() as { polishId: string };
+      sessionStorage.setItem("intake", JSON.stringify(intake));
       router.push(`/preview?polishId=${data.polishId}`);
     } catch {
       setSaving(false);
