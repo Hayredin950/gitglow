@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Run in nodejs runtime to avoid Edge runtime incompatibility with
-// next-auth/jwt which depends on Node.js-only modules (node:util/types, etc.)
-export const runtime = "nodejs";
-
 const PROTECTED = ["/analyze", "/intake", "/preview", "/deploy", "/complete", "/dashboard"];
 
 // NextAuth v5 JWT session cookie names
@@ -15,7 +11,7 @@ const SESSION_COOKIE = [
   "__Secure-authjs.session-token",
 ];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isProtected = PROTECTED.some((p) => pathname.startsWith(p));
 

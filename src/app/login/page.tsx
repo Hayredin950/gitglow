@@ -2,7 +2,7 @@
 
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Sparkles, Code2, CheckCircle2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -21,13 +21,13 @@ const PERKS = [
   "Polish Score™ from 0-100",
 ];
 
-export default function LoginPage() {
+// Separate component so useSearchParams is inside a Suspense boundary
+function LoginContent() {
   const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const errorKey = searchParams.get("error") ?? "";
   const errorMessage = errorKey ? (ERROR_MESSAGES[errorKey] ?? ERROR_MESSAGES.Default) : null;
-  // After 2 seconds, stop waiting for the session check and show the login form
   const [sessionTimedOut, setSessionTimedOut] = useState(false);
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function LoginPage() {
             onClick={() => {
               // When running inside an iframe (v0 preview / embedded), opening
               // OAuth in the same frame gets intercepted by the sandbox auth layer.
-              // Always open in a new tab so the callback can complete normally.
+              // Open in a new tab so the callback can complete normally.
               const inIframe = typeof window !== "undefined" && window.self !== window.top;
               if (inIframe) {
                 const origin = window.location.origin;
@@ -121,5 +121,19 @@ export default function LoginPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="h-6 w-6 rounded-full border-2 border-zinc-700 border-t-zinc-300 animate-spin" />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
