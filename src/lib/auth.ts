@@ -23,6 +23,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.username = gh.login;
         token.githubToken = account.access_token ?? null;
         token.avatar = gh.avatar_url;
+
+        // Persist the GitHub token and username to the User record so API routes can retrieve them
+        if (account.access_token) {
+          await db.user.update({
+            where: { id: user.id },
+            data: {
+              githubToken: account.access_token,
+              username: gh.login,
+            },
+          });
+        }
       }
       return token;
     },
