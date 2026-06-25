@@ -5,6 +5,8 @@ export async function generateProject(
   spec: ProjectSpec,
   ownerName: string
 ): Promise<GeneratedProject> {
+  console.log("[v0] Calling Claude API to generate project:", spec.name);
+  
   const response = await anthropic.messages.create({
     model: "claude-sonnet-4-5",
     max_tokens: 8192,
@@ -38,31 +40,47 @@ Return valid JSON only.`,
     ],
   });
 
+  console.log("[v0] Claude API response received, status:", response.stop_reason);
+  
   const block = response.content[0];
-  if (block.type !== "text") throw new Error("No text response from AI");
+  if (block.type !== "text") {
+    console.error("[v0] Unexpected response type:", block.type);
+    throw new Error("No text response from AI");
+  }
 
   // Extract JSON from the response (handle markdown code fences)
   const text = block.text.trim();
+  console.log("[v0] Response text length:", text.length, "First 200 chars:", text.slice(0, 200));
+  
   const jsonMatch = text.match(/```(?:json)?\s*([\s\S]+?)\s*```/) ?? null;
   const jsonStr = jsonMatch ? jsonMatch[1] : text;
 
   let project: GeneratedProject;
   try {
+    console.log("[v0] Parsing JSON, string length:", jsonStr.length);
     project = JSON.parse(jsonStr) as GeneratedProject;
-  } catch {
+    console.log("[v0] Parsed project successfully");
+  } catch (parseErr) {
+    const msg = parseErr instanceof Error ? parseErr.message : "Unknown parse error";
+    console.error("[v0] JSON parse error:", msg);
     throw new Error(`Failed to parse project JSON: ${jsonStr.slice(0, 200)}`);
   }
 
   // Validate project structure
   if (!project.name || typeof project.name !== "string") {
+    console.error("[v0] Invalid project name:", project.name);
     throw new Error("Invalid project: missing or invalid 'name' field");
   }
   if (!project.description || typeof project.description !== "string") {
+    console.error("[v0] Invalid project description:", project.description);
     throw new Error("Invalid project: missing or invalid 'description' field");
   }
   if (!project.files || typeof project.files !== "object") {
+    console.error("[v0] Invalid project files:", typeof project.files);
     throw new Error("Invalid project: missing 'files' object");
   }
+
+  console.log("[v0] Project validation passed. Files count:", Object.keys(project.files).length);
 
   // Validate file paths and sanitize
   const validFiles: Record<string, string> = {};
@@ -72,19 +90,23 @@ Return valid JSON only.`,
       continue;
     }
     if (typeof content !== "string") {
-      console.warn(`[v0] Skipping file ${path} with non-string content`);
+      console.warn(`[v0] Skipping file ${path} with non-string content, type:`, typeof content);
       continue;
     }
     validFiles[path] = content;
   }
 
+  console.log("[v0] Valid files after filtering:", Object.keys(validFiles).length);
+
   if (Object.keys(validFiles).length === 0) {
+    console.error("[v0] No valid files found in project");
     throw new Error("Project has no valid files");
   }
 
   project.files = validFiles;
   project.topics = Array.isArray(project.topics) ? project.topics : [];
 
+  console.log("[v0] Project fully validated and ready:", project.name);
   return project;
 }
 
