@@ -2,7 +2,7 @@
 
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Sparkles, Code2, CheckCircle2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -27,6 +27,8 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const errorKey = searchParams.get("error") ?? "";
   const errorMessage = errorKey ? (ERROR_MESSAGES[errorKey] ?? ERROR_MESSAGES.Default) : null;
+  // After 2 seconds, stop waiting for the session check and show the login form
+  const [sessionTimedOut, setSessionTimedOut] = useState(false);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -34,9 +36,14 @@ export default function LoginPage() {
     }
   }, [status, router]);
 
-  // Show spinner while session is loading or while router.replace is in-flight —
-  // returning null causes a black screen before the navigation fires.
-  if (status === "loading" || status === "authenticated") {
+  useEffect(() => {
+    if (status !== "loading") return;
+    const t = setTimeout(() => setSessionTimedOut(true), 2000);
+    return () => clearTimeout(t);
+  }, [status]);
+
+  // Only show the spinner briefly while checking — never block forever
+  if ((status === "loading" && !sessionTimedOut) || status === "authenticated") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="h-6 w-6 rounded-full border-2 border-zinc-700 border-t-zinc-300 animate-spin" />
