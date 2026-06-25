@@ -50,7 +50,7 @@ Requirements (use ALL of these):
 Output ONLY the raw markdown, no explanation, no code fences around the whole thing.`;
 
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "claude-sonnet-4-5",
     max_tokens: 4096,
     messages: [
       {
@@ -74,7 +74,7 @@ export async function* streamProfileReadme(
   const skillsStr = skills.join(", ");
 
   const stream = await anthropic.messages.stream({
-    model: "claude-sonnet-4-6",
+    model: "claude-sonnet-4-5",
     max_tokens: 4096,
     system: `You are an expert GitHub profile designer. Generate stunning profile READMEs that get developers hired. Output ONLY raw markdown.`,
     messages: [

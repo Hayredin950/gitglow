@@ -5,7 +5,7 @@ export async function generateBio(intake: UserIntake): Promise<string> {
   const { fullName, skills, goal, tone, location } = intake;
 
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "claude-sonnet-4-5",
     max_tokens: 256,
     system: `You are an expert at writing punchy, recruiter-optimized GitHub bios. Max 160 characters. No quotes. Include emojis sparingly. Focus on what they build and their goal.`,
     messages: [

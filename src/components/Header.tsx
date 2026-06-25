@@ -6,13 +6,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { Sparkles, LogOut } from "lucide-react";
 
+// Pages that render their own nav or don't need the authenticated header
 const EXCLUDED = ["/", "/login", "/gallery"];
 
 export function Header() {
   const { data: session, status } = useSession();
   const pathname = usePathname();
 
-  if (status !== "authenticated" || EXCLUDED.includes(pathname)) return null;
+  // Don't show the authenticated header on public pages
+  if (EXCLUDED.includes(pathname)) return null;
+  // Don't show while session resolves or when not authenticated
+  if (status !== "authenticated") return null;
 
   const user = session.user as {
     name?: string | null;

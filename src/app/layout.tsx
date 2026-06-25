@@ -8,7 +8,12 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.AUTH_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(
+    process.env.V0_RUNTIME_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+    process.env.AUTH_URL ||
+    "http://localhost:3000"
+  ),
   title: "GitGlow ✨ — Polish Your GitHub Profile with AI",
   description:
     "Transform your GitHub profile from empty to elite in 3 minutes. AI-generated README, projects, contribution history, and more. 100% free.",

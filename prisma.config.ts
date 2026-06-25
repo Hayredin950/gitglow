@@ -1,7 +1,8 @@
 import { defineConfig } from "prisma/config";
 import { config } from "dotenv";
 
-// Load .env.local first (Next.js convention), fall back to .env
+// Load env files in priority order — Next.js uses .env.development.local in dev
+config({ path: ".env.development.local" });
 config({ path: ".env.local" });
 config({ path: ".env" });
 

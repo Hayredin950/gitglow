@@ -44,34 +44,12 @@ const BEFORE_AFTER = [
 
 export default function LandingPage() {
   return (
-    <main className="relative overflow-hidden">
+    <main className="relative">
       {/* Background glow */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-blue-600/10 blur-[120px]" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-amber-500/5 blur-[100px]" />
       </div>
-
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-lg">
-            <Sparkles className="h-5 w-5 text-blue-400" />
-            GitGlow
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/gallery" className="text-sm text-zinc-400 hover:text-zinc-100 transition-colors hidden sm:block">
-              Gallery
-            </Link>
-            <Link
-              href="/login"
-              className="flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-medium transition-colors"
-            >
-              <Code2 className="h-4 w-4" />
-              Polish My GitHub
-            </Link>
-          </div>
-        </div>
-      </nav>
 
       {/* Hero */}
       <section className="mx-auto max-w-4xl px-4 pt-24 pb-16 text-center">
@@ -114,7 +92,7 @@ export default function LandingPage() {
       <section className="border-y border-zinc-800 bg-zinc-900/40">
         <div className="mx-auto max-w-4xl px-4 py-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
           {STATS.map((s) => (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
+            <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0 }} className="text-center">
               <div className="text-3xl font-bold text-white">{s.value}</div>
               <div className="text-sm text-zinc-400 mt-1">{s.label}</div>
             </motion.div>
@@ -124,7 +102,7 @@ export default function LandingPage() {
 
       {/* Before / After table */}
       <section className="mx-auto max-w-4xl px-4 py-24">
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0 }} className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">What GitGlow does</h2>
           <p className="text-zinc-400">Every item is generated and pushed to your real GitHub account.</p>
         </motion.div>
@@ -140,7 +118,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, x: -10 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.08 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0 }}
               className="grid grid-cols-3 px-6 py-4 border-t border-zinc-800 items-center"
             >
               <span className="font-medium text-zinc-200">{row.label}</span>
@@ -153,7 +131,7 @@ export default function LandingPage() {
 
       {/* Features */}
       <section className="mx-auto max-w-4xl px-4 pb-24">
-        <motion.h2 initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-3xl font-bold text-center mb-12">
+        <motion.h2 initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: 0 }} className="text-3xl font-bold text-center mb-12">
           Everything included. Zero effort.
         </motion.h2>
         <div className="grid sm:grid-cols-2 gap-5">
@@ -163,7 +141,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0 }}
               className="glass rounded-2xl p-6"
             >
               <f.icon className="h-7 w-7 text-blue-400 mb-4" />
@@ -185,7 +163,7 @@ export default function LandingPage() {
               { step: "2", title: "Answer 5 questions", desc: "Tell us your name, skills, and goals. That's it." },
               { step: "3", title: "Deploy", desc: "Preview everything, then hit Deploy. We push it all to GitHub." },
             ].map((item, i) => (
-              <motion.div key={item.step} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.15 }} viewport={{ once: true }} className="flex flex-col items-center">
+              <motion.div key={item.step} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.15 }}               viewport={{ once: true, amount: 0 }} className="flex flex-col items-center">
                 <div className="w-12 h-12 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-xl font-bold text-blue-400 mb-4">
                   {item.step}
                 </div>
@@ -199,7 +177,7 @@ export default function LandingPage() {
 
       {/* Final CTA */}
       <section className="mx-auto max-w-2xl px-4 py-24 text-center">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="glass rounded-3xl p-12">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true, amount: 0 }} className="glass rounded-3xl p-12">
           <Sparkles className="h-10 w-10 text-blue-400 mx-auto mb-6" />
           <h2 className="text-3xl font-bold mb-4">Ready for your glow-up?</h2>
           <p className="text-zinc-400 mb-8">Join thousands of developers who upgraded their GitHub profile.</p>
