@@ -184,7 +184,7 @@ export async function POST(req: Request) {
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ type: "error", message })}\n\n`)
         );
-        await db.polish.update({ where: { id: polishId }, data: { status: "FAILED", errorMessage: message } });
+        await db.polish.update({ where: { id: polishId }, data: { status: "FAILED" } });
       } finally {
         controller.close();
       }
