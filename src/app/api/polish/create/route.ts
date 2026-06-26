@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { UserIntake } from "@/types/polish";
 import { generateScriptBasedProfile } from "@/lib/scripts/orchestrator";
+import { PolishStatus } from "@/generated/prisma";
 
 export const dynamic = 'force-dynamic';
 
@@ -77,7 +78,7 @@ export async function POST(req: Request) {
       data: {
         userId,
         userIntake: intake as object,
-        status: scriptResult.success ? "READY" : "FAILED",
+        status: scriptResult.success ? PolishStatus.READY : PolishStatus.FAILED,
         scriptResult: scriptResult as object,
       },
     });
