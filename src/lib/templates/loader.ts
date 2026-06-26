@@ -4396,5 +4396,6 @@ export function listTemplates() {
     category: template.category,
     difficulty: template.difficulty,
     popularity: template.popularity,
+    stars: template.stars,
   }));
 }
