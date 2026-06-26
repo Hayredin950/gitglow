@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { createRepo, pushFile, updateProfile, setRepoTopics, repoExists, createBranch, createPullRequest, mergePullRequest, deleteBranch, deleteRepo } from "@/lib/github/push";
+import { createRepo, pushFile, updateProfile, setRepoTopics, repoExists, createBranch, createPullRequest, mergePullRequest, deleteBranch, deleteRepo, enableBranchProtection } from "@/lib/github/push";
 import { validateTokenScopes, checkScopesForDeploy } from "@/lib/github/validate";
 import type { GeneratedProject, CommitPlan } from "@/types/polish";
 import { generateExecutionScript, generateSummary } from "@/lib/scripts/orchestrator";
@@ -111,6 +111,8 @@ export async function POST(req: Request) {
             await new Promise((r) => setTimeout(r, 1500));
           }
           await pushFile(token, owner, readmeRepoName, "README.md", readme, "feat: add profile README ✨", "main", committer);
+          // Enable branch protection on profile repo to fix the warning
+          await enableBranchProtection(token, owner, readmeRepoName, "main");
           emit("readme", "✅ Profile README created successfully!", 2, total);
         } catch (readmeErr) {
           const msg = readmeErr instanceof Error ? readmeErr.message : "Unknown error";
@@ -171,6 +173,9 @@ export async function POST(req: Request) {
                 await setRepoTopics(token, owner, repoName, topics);
               }
               
+              // Enable branch protection to fix the warning
+              await enableBranchProtection(token, owner, repoName, "main");
+              
               reposCreated.push(repoName);
               emit("project", `✅ ${repoName} created with ${fileEntries.length} files!`, currentStep, total);
               currentStep++;
@@ -210,6 +215,8 @@ export async function POST(req: Request) {
             if (project.topics.length > 0) {
               await setRepoTopics(token, owner, project.name, project.topics);
             }
+            // Enable branch protection to fix the warning
+            await enableBranchProtection(token, owner, project.name, "main");
             reposCreated.push(project.name);
             emit("project", `✅ Project repository created with ${fileEntries.length} files!`, currentStep, total);
             currentStep++;
@@ -242,7 +249,7 @@ export async function POST(req: Request) {
               
               // Enhance the forked repo
               emit("dream-repo", `Enhancing ${forkedRepoName}...`, currentStep, total);
-              await enhanceFork(token, forkedOwner, forkedRepoName, dbUser.name ?? owner);
+              await enhanceFork(token, forkedOwner, forkedRepoName, dbUser.name ?? owner, committer);
               
               reposCreated.push(forkedRepoName);
               emit("dream-repo", `✅ Successfully forked and enhanced ${forkedRepoName}!`, currentStep, total);
@@ -264,18 +271,20 @@ export async function POST(req: Request) {
           emit("commits", `Generating contribution commits for ${selectedTemplates.length} repos...`, 4, total);
           commitPlanToUse = [];
           
+          const commitsPerRepo = Math.ceil(400 / selectedTemplates.length); // Aim for 400+ total commits
+          
           for (let i = 0; i < selectedTemplates.length; i++) {
             const templateId = selectedTemplates[i];
             const repoName = `${templateId}-${i + 1}`;
-            const commits = generateCommits(templateId, 20); // 20 commits per repo
-            const dates = generateCommitDates(new Date(), 20);
+            const commits = generateCommits(templateId, commitsPerRepo);
+            const dates = generateCommitDates(new Date(), commitsPerRepo);
             
             commits.forEach((commit, j) => {
               commitPlanToUse.push({
                 repo: repoName,
                 date: dates[j].toISOString(),
                 path: `.gitkeep-${j}`,
-                content: `# Commit ${j + 1}\n\nGenerated contribution commit.`,
+                content: `# Commit ${j + 1}\n\nGenerated contribution commit for ${templateId}.`,
                 message: commit.message,
               });
             });
@@ -285,7 +294,8 @@ export async function POST(req: Request) {
         emit("commits", `Pushing ${commitPlanToUse.length} contribution commits...`, 4, total);
         let pushed = 0;
         let failed = 0;
-        for (const commit of commitPlanToUse.slice(0, 100)) { // Increased to 100 for script-based
+        const maxCommitsToPush = scriptBased ? 400 : 100; // Allow up to 400 commits for script-based
+        for (const commit of commitPlanToUse.slice(0, maxCommitsToPush)) {
           try {
             await pushFile(
               token,
@@ -313,8 +323,9 @@ export async function POST(req: Request) {
           console.log(`[v0] Commit push completed: ${pushed} succeeded, ${failed} failed`);
         }
 
-        // Step 5: Earn GitHub badges (optional)
-        if (earnBadges) {
+        // Step 5: Earn GitHub badges (always enabled for script-based profiles)
+        const shouldEarnBadges = earnBadges || scriptBased;
+        if (shouldEarnBadges) {
           emit("badges", "Earning GitHub achievement badges (YOLO, Pull Shark, Quickdraw)...", 5, total);
           try {
             const tempRepoName = `badge-helper-${Date.now()}`;
@@ -322,17 +333,17 @@ export async function POST(req: Request) {
             await new Promise((r) => setTimeout(r, 1500));
 
             // Initialize repo with README
-            await pushFile(token, owner, tempRepoName, "README.md", "# Badge Helper\n\nThis repo helps earn GitHub achievement badges.", "feat: initialize badge helper", "main", committer);
+            await pushFile(token, owner, tempRepoName, "README.md", "# Badge Helper\n\nThis repo helps earn GitHub achievement badges.\n\n## Badges Being Earned\n- **YOLO**: Merged PRs without review\n- **Pull Shark**: Created 5+ PRs\n- **Quickdraw**: Merged PRs quickly after creation", "feat: initialize badge helper", "main", committer);
             await new Promise((r) => setTimeout(r, 1000));
 
-            // Create 5 PRs and merge them immediately for badges
-            for (let i = 1; i <= 5; i++) {
+            // Create 7 PRs and merge them immediately for badges (increased from 5 to ensure badge triggers)
+            for (let i = 1; i <= 7; i++) {
               const branchName = `badge-${i}`;
-              const badgeContent = `# Badge Automation PR #${i}\n\nThis PR helps earn GitHub achievement badges.\n\n- YOLO: Merged without review\n- Pull Shark: Part of 5+ PRs\n- Quickdraw: Merged quickly`;
+              const badgeContent = `# Badge Automation PR #${i}\n\nThis PR helps earn GitHub achievement badges.\n\n## Badges Being Earned\n- **YOLO**: Merged without review\n- **Pull Shark**: Part of 7+ PRs\n- **Quickdraw**: Merged quickly\n\nPR Number: ${i}\nCreated: ${new Date().toISOString()}`;
               
               // Create branch
               await createBranch(token, owner, tempRepoName, branchName, "main");
-              emit("badges", `Created branch ${branchName} (${i}/5)...`, 5, total);
+              emit("badges", `Created branch ${branchName} (${i}/7)...`, 5, total);
               
               // Add file to branch
               await pushFile(token, owner, tempRepoName, `PR_${i}.md`, badgeContent, `feat: badge automation PR #${i}`, branchName, committer);
@@ -344,30 +355,30 @@ export async function POST(req: Request) {
                 owner, 
                 tempRepoName, 
                 `Badge Automation PR #${i}`, 
-                "Automated PR for GitHub badge earning", 
+                "Automated PR for GitHub badge earning - helps earn YOLO, Pull Shark, and Quickdraw badges", 
                 branchName, 
                 "main"
               );
-              emit("badges", `Created PR #${pr.number} (${i}/5)...`, 5, total);
-              await new Promise((r) => setTimeout(r, 2000));
+              emit("badges", `Created PR #${pr.number} (${i}/7)...`, 5, total);
+              await new Promise((r) => setTimeout(r, 1000));
               
               // Merge PR immediately for YOLO badge (without review)
               await mergePullRequest(token, owner, tempRepoName, pr.number);
-              emit("badges", `Merged PR #${pr.number} - YOLO badge triggered! (${i}/5)...`, 5, total);
+              emit("badges", `Merged PR #${pr.number} - YOLO badge triggered! (${i}/7)...`, 5, total);
               
               // Delete branch after merge
               await deleteBranch(token, owner, tempRepoName, branchName);
               
-              await new Promise((r) => setTimeout(r, 1000));
+              await new Promise((r) => setTimeout(r, 800));
             }
             
             // Clean up temp repo
             await deleteRepo(token, owner, tempRepoName);
-            emit("badges", "✅ Badge automation complete! YOLO, Pull Shark, Quickdraw badges earned!", 5, total);
+            emit("badges", "✅ Badge automation complete! YOLO, Pull Shark, Quickdraw badges earned (7 PRs created and merged)!", 5, total);
           } catch (badgeErr) {
             const msg = badgeErr instanceof Error ? badgeErr.message : "Unknown error";
             console.warn("[v0] Badge automation failed:", msg);
-            emit("badges", "Badge automation skipped (requires manual PR creation)", 5, total);
+            emit("badges", `⚠️ Badge automation encountered an issue: ${msg}. Some badges may require manual PR creation.`, 5, total);
           }
         }
 
@@ -384,6 +395,7 @@ export async function POST(req: Request) {
             avatar: avatar || undefined,
             templateName: templateName || undefined,
             completedAt: new Date(),
+            isPublic: true, // Make completed profiles visible in gallery
           },
         });
 

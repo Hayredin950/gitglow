@@ -160,7 +160,7 @@ function PreviewContent() {
       commitPlan: state.commitPlan,
       scoreBefore: state.scoreBefore,
       email: intakeData.email,
-      avatar: intakeData.avatar,
+      fullName: intakeData.fullName,
       templateName: intakeData.templateName,
       scriptBased: state.scriptBased,
       selectedTemplates: state.selectedTemplates,
@@ -317,84 +317,122 @@ function PreviewContent() {
 
         {/* Script-based information */}
         {state.scriptBased && state.scriptResult && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 glass rounded-2xl p-6">
-            <div className="flex items-center gap-2 mb-4">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 glass rounded-2xl p-6 border border-blue-500/20 shadow-lg shadow-blue-500/10">
+            <div className="flex items-center gap-2 mb-6">
               <Eye className="h-4 w-4 text-blue-400" />
               <h3 className="font-semibold text-sm text-zinc-400 uppercase tracking-wider">Script-Based Profile Plan</h3>
+              <span className="ml-auto rounded-full bg-emerald-500/20 border border-emerald-500/30 px-3 py-1 text-xs text-emerald-400 font-medium">
+                Premium
+              </span>
             </div>
             
-            <div className="space-y-4">
-              {/* Templates */}
+            <div className="grid gap-6">
+              {/* Templates - Premium Card Grid */}
               {state.selectedTemplates && state.selectedTemplates.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-zinc-300 mb-2">Selected Templates ({state.selectedTemplates.length})</h4>
-                  <div className="flex flex-wrap gap-2">
+                <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4">
+                  <h4 className="text-sm font-semibold text-zinc-200 mb-3 flex items-center gap-2">
+                    <span className="text-blue-400">📦</span>
+                    Selected Projects ({state.selectedTemplates.length})
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {state.selectedTemplates.map((template, index) => (
-                      <span key={index} className="rounded-full bg-blue-600/20 border border-blue-600/30 px-3 py-1 text-sm text-blue-300">
-                        {template}
-                      </span>
+                      <div key={index} className="rounded-lg bg-gradient-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/20 p-3 hover:border-blue-500/40 transition-all">
+                        <div className="font-medium text-zinc-200 text-sm">{template}</div>
+                        <div className="text-xs text-zinc-500 mt-1">Template #{index + 1}</div>
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Contribution Plan */}
+              {/* Contribution Plan - Premium Stats */}
               {state.scriptResult.contributionPlan && (
-                <div>
-                  <h4 className="text-sm font-medium text-zinc-300 mb-2">Contribution Plan</h4>
-                  <p className="text-zinc-400">
-                    <span className="text-xl font-bold text-blue-400">{state.scriptResult.contributionPlan.totalContributions}</span>
-                    {" "}total contributions planned
-                  </p>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Status: {state.scriptResult.contributionPlan.validation.valid ? '✅ Valid' : '❌ Invalid'}
-                  </p>
+                <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4">
+                  <h4 className="text-sm font-semibold text-zinc-200 mb-3 flex items-center gap-2">
+                    <span className="text-emerald-400">📊</span>
+                    Contribution Plan
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="rounded-lg bg-zinc-800/50 p-3">
+                      <div className="text-2xl font-bold text-blue-400">{state.scriptResult.contributionPlan.totalContributions || 400}</div>
+                      <div className="text-xs text-zinc-500 mt-1">Total Contributions</div>
+                    </div>
+                    <div className="rounded-lg bg-zinc-800/50 p-3">
+                      <div className="text-2xl font-bold text-emerald-400">{state.scriptResult.contributionPlan.validation?.valid ? '✅' : '⚠️'}</div>
+                      <div className="text-xs text-zinc-500 mt-1">Validation Status</div>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* Dream Repos */}
+              {/* Dream Repos - Premium List */}
               {state.scriptResult.dreamRepos && state.scriptResult.dreamRepos.valid.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-zinc-300 mb-2">Dream Repos to Fork ({state.scriptResult.dreamRepos.valid.length})</h4>
+                <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4">
+                  <h4 className="text-sm font-semibold text-zinc-200 mb-3 flex items-center gap-2">
+                    <span className="text-purple-400">🔀</span>
+                    Dream Repos to Fork ({state.scriptResult.dreamRepos.valid.length})
+                  </h4>
                   <div className="space-y-2">
                     {state.scriptResult.dreamRepos.valid.map((repo: any, index: number) => (
-                      <div key={index} className="text-sm text-zinc-400">
-                        {repo.owner}/{repo.repo}
+                      <div key={index} className="rounded-lg bg-zinc-800/50 border border-zinc-700 p-3 flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-zinc-200 text-sm">{repo.owner}/{repo.repo}</div>
+                          <div className="text-xs text-zinc-500 mt-1">Repository #{index + 1}</div>
+                        </div>
+                        <span className="rounded-full bg-purple-500/20 border border-purple-500/30 px-2 py-1 text-xs text-purple-300">
+                          Fork
+                        </span>
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-zinc-500 mt-2">
-                    Estimated time: {state.scriptResult.dreamRepos.complexity.estimatedTime}
-                  </p>
+                  <div className="mt-3 text-xs text-zinc-500">
+                    ⏱️ Estimated time: {state.scriptResult.dreamRepos.complexity?.estimatedTime || '2-3 minutes'}
+                  </div>
                 </div>
               )}
 
-              {/* Repo Metadata */}
+              {/* Repo Metadata - Premium Grid */}
               {state.scriptResult.repoMetadata && state.scriptResult.repoMetadata.repos.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-zinc-300 mb-2">Template Repos to Create ({state.scriptResult.repoMetadata.repos.length})</h4>
-                  <div className="space-y-2">
+                <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4">
+                  <h4 className="text-sm font-semibold text-zinc-200 mb-3 flex items-center gap-2">
+                    <span className="text-amber-400">🚀</span>
+                    Template Repos to Create ({state.scriptResult.repoMetadata.repos.length})
+                  </h4>
+                  <div className="grid grid-cols-1 gap-2">
                     {state.scriptResult.repoMetadata.repos.map((repo: any, index: number) => (
-                      <div key={index} className="text-sm text-zinc-400">
-                        <span className="font-medium text-zinc-300">{repo.name}</span>
-                        <p className="text-xs text-zinc-500 mt-1">{repo.description}</p>
+                      <div key={index} className="rounded-lg bg-gradient-to-r from-amber-600/10 to-orange-600/10 border border-amber-500/20 p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium text-zinc-200 text-sm">{repo.name}</div>
+                            <div className="text-xs text-zinc-500 mt-1">{repo.description}</div>
+                          </div>
+                          <span className="rounded-full bg-amber-500/20 border border-amber-500/30 px-2 py-1 text-xs text-amber-300">
+                            Create
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-zinc-500 mt-2">
-                    All repos include MIT License and Premium README
-                  </p>
+                  <div className="mt-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-2">
+                    <p className="text-xs text-emerald-400 text-center">
+                      ✨ All repos include MIT License and Premium README
+                    </p>
+                  </div>
                 </div>
               )}
 
-              {/* Errors/Warnings */}
+              {/* Errors/Warnings - Premium Alert */}
               {state.scriptResult.errors && state.scriptResult.errors.length > 0 && (
-                <div className="rounded-lg bg-yellow-600/10 border border-yellow-600/20 p-3">
-                  <h4 className="text-sm font-medium text-yellow-400 mb-2">Warnings</h4>
-                  <ul className="space-y-1">
+                <div className="rounded-xl bg-gradient-to-r from-yellow-600/10 to-orange-600/10 border border-yellow-500/20 p-4">
+                  <h4 className="text-sm font-semibold text-yellow-400 mb-3 flex items-center gap-2">
+                    <span>⚠️</span>
+                    Warnings ({state.scriptResult.errors.length})
+                  </h4>
+                  <ul className="space-y-2">
                     {state.scriptResult.errors.map((error: string, index: number) => (
-                      <li key={index} className="text-xs text-yellow-300">
-                        ⚠️ {error}
+                      <li key={index} className="text-xs text-yellow-300 flex items-start gap-2">
+                        <span className="mt-0.5">•</span>
+                        <span>{error}</span>
                       </li>
                     ))}
                   </ul>

@@ -49,9 +49,10 @@ export async function POST(req: Request) {
       return Response.json({ error: "Theme preference is required" }, { status: 400 });
     }
 
-    if (!intake.avatar) {
-      return Response.json({ error: "Avatar preference is required" }, { status: 400 });
-    }
+    // Avatar is optional now - removed avatar style step
+    // if (!intake.avatar) {
+    //   return Response.json({ error: "Avatar preference is required" }, { status: 400 });
+    // }
 
     if (!Array.isArray(intake.selectedTemplates) || intake.selectedTemplates.length === 0) {
       return Response.json({ error: "At least one template is required" }, { status: 400 });
@@ -66,9 +67,18 @@ export async function POST(req: Request) {
     });
 
     // Generate script-based profile
-    const sessionUser = session.user as { login?: string; id: string };
+    const sessionUser = session.user as { username?: string; id: string };
+    // Prefer session username; fall back to DB lookup so we never use the raw userId
+    let githubLogin = sessionUser.username;
+    if (!githubLogin) {
+      const dbUser = await db.user.findUnique({ where: { id: userId }, select: { username: true } });
+      githubLogin = dbUser?.username ?? undefined;
+    }
+    if (!githubLogin) {
+      return Response.json({ error: "Could not determine GitHub username. Please sign out and sign in again." }, { status: 400 });
+    }
     const githubProfile = {
-      login: sessionUser.login || userId,
+      login: githubLogin,
       id: userId,
     } as any;
     

@@ -144,6 +144,11 @@ export async function forkRepo(
   return data.full_name;
 }
 
+export interface Committer {
+  name: string;
+  email: string;
+}
+
 /**
  * Get a file from a repository */
 async function getRepoFile(
@@ -191,7 +196,8 @@ export async function enhanceFork(
   token: string,
   owner: string,
   repo: string,
-  fullName: string
+  fullName: string,
+  committer?: Committer
 ) {
   const octokit = createOctokit(token);
   const defaultBranch = await getRepoDefaultBranch(token, owner, repo);
@@ -274,14 +280,21 @@ This is an enhanced fork of ${owner}/${repo}.
     tree,
   });
 
-  // Create commit
-  const { data: commitData } = await octokit.git.createCommit({
+  // Create commit with user's email and username if provided
+  const commitParams: any = {
     owner,
     repo,
     message: "docs: enhance repo",
     tree: treeData.sha,
     parents: [refData.object.sha],
-  });
+  };
+  
+  if (committer) {
+    commitParams.author = committer;
+    commitParams.committer = committer;
+  }
+  
+  const { data: commitData } = await octokit.git.createCommit(commitParams);
 
   // Update branch
   await octokit.git.updateRef({

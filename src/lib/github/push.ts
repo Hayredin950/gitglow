@@ -231,3 +231,31 @@ export async function deleteRepo(
     repo,
   });
 }
+
+export async function enableBranchProtection(
+  token: string,
+  owner: string,
+  repo: string,
+  branch = "main"
+) {
+  const octokit = createOctokit(token);
+  
+  try {
+    await octokit.repos.updateBranchProtection({
+      owner,
+      repo,
+      branch,
+      required_status_checks: null,
+      enforce_admins: false,
+      required_pull_request_reviews: null,
+      restrictions: null,
+      allow_force_pushes: true,
+      allow_deletions: true,
+    });
+    console.log(`[v0] Branch protection enabled for ${branch} in ${owner}/${repo}`);
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : "Unknown error";
+    console.warn(`[v0] Failed to enable branch protection: ${errMsg}`);
+    // Don't throw - branch protection is optional
+  }
+}

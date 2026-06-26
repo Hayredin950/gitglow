@@ -29,15 +29,9 @@ const THEMES = [
   { value: "minimal", label: "Minimal", desc: "Clean and simple light theme" },
 ] as const;
 
-const AVATAR_CHOICES = [
-  { value: "professional" as const, label: "Professional", icon: "💼" },
-  { value: "creative" as const, label: "Creative", icon: "✨" },
-  { value: "classic" as const, label: "Classic", icon: "🎯" },
-];
-
 const TEMPLATES_LIST = listTemplates();
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export default function IntakePage() {
   const router = useRouter();
@@ -45,7 +39,6 @@ export default function IntakePage() {
   const [intake, setIntake] = useState<Partial<UserIntake>>({
     skills: [],
     goal: "job",
-    avatar: "professional",
     theme: "tokyo-night",
     selectedTemplates: [],
     dreamRepos: [],
@@ -56,11 +49,11 @@ export default function IntakePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const totalSteps = 10;
+  const totalSteps = 9;
   const progress = ((step + 1) / totalSteps) * 100;
 
   function nextStep() {
-    setStep((s) => Math.min(s + 1, 9) as Step);
+    setStep((s) => Math.min(s + 1, 8) as Step);
   }
   function prevStep() {
     setStep((s) => Math.max(s - 1, 0) as Step);
@@ -319,60 +312,7 @@ export default function IntakePage() {
       </div>
     </motion.div>,
 
-    // Step 5: Avatar Selection
-    <motion.div
-      key="avatar"
-      initial={{ opacity: 0, x: 30 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -30 }}
-      className="space-y-6"
-    >
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Choose your avatar style</h2>
-        <p className="text-zinc-400 text-sm">
-          You can change this later. We&apos;ll use your initials.
-        </p>
-      </div>
-      <div className="space-y-3">
-        {AVATAR_CHOICES.map((a) => (
-          <button
-            key={a.value}
-            onClick={() => setIntake((p) => ({ ...p, avatar: a.value }))}
-            className={`w-full flex items-center gap-4 rounded-xl border p-4 transition-colors ${
-              intake.avatar === a.value
-                ? "border-blue-500 bg-blue-600/10"
-                : "border-zinc-700 hover:border-zinc-500"
-            }`}
-          >
-            <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-              <img
-                src={getAvatarURL(
-                  a.value,
-                  (intake.fullName || "XX")
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                )}
-                alt={a.label}
-                className="w-full h-full"
-              />
-            </div>
-            <div className="flex-1 text-left">
-              <div className="font-medium">{a.icon} {a.label}</div>
-              <div className="text-sm text-zinc-400">
-                {getAvatarInfo(a.value).description}
-              </div>
-            </div>
-            {intake.avatar === a.value && (
-              <Check className="h-4 w-4 text-blue-400" />
-            )}
-          </button>
-        ))}
-      </div>
-    </motion.div>,
-
-    // Step 6: Template Selection (Multiple)
+    // Step 5: Template Selection (Multiple) - Premium Card Grid
     <motion.div
       key="template"
       initial={{ opacity: 0, x: 30 }}
@@ -381,30 +321,41 @@ export default function IntakePage() {
       className="space-y-6"
     >
       <div>
-        <h2 className="text-2xl font-bold mb-2">Select your templates</h2>
+        <h2 className="text-2xl font-bold mb-2">Select your projects</h2>
         <p className="text-zinc-400 text-sm">
-          Choose up to 5 premium pre-built templates for your projects.
+          Choose up to 5 premium real projects for your portfolio.
         </p>
       </div>
-      <div className="space-y-3 max-h-96 overflow-y-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto premium-scroll">
         {TEMPLATES_LIST.map((t) => (
           <button
             key={t.id}
             onClick={() => toggleTemplate(t.id)}
             disabled={!intake.selectedTemplates?.includes(t.id) && (intake.selectedTemplates?.length ?? 0) >= 5}
-            className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
+            className={`relative rounded-xl border p-4 text-left transition-all hover:scale-[1.02] ${
               intake.selectedTemplates?.includes(t.id)
-                ? "border-blue-500 bg-blue-600/10"
-                : "border-zinc-700 hover:border-zinc-500 disabled:opacity-50"
+                ? "border-blue-500 bg-gradient-to-br from-blue-600/20 to-purple-600/20 shadow-lg shadow-blue-500/20"
+                : "border-zinc-700 bg-zinc-900/50 hover:border-zinc-500 disabled:opacity-50"
             }`}
           >
-            <div className="h-5 w-5 flex-shrink-0 text-base">📦</div>
-            <div className="flex-1">
-              <div className="font-medium">{t.name}</div>
-              <div className="text-sm text-zinc-400">{t.description}</div>
+            <div className="absolute top-3 right-3">
+              {intake.selectedTemplates?.includes(t.id) && (
+                <div className="rounded-full bg-blue-500 p-1">
+                  <Check className="h-3 w-3 text-white" />
+                </div>
+              )}
             </div>
-            {intake.selectedTemplates?.includes(t.id) && (
-              <Check className="h-4 w-4 text-blue-400" />
+            <div className="text-2xl mb-2">📦</div>
+            <div className="font-semibold text-zinc-200 mb-1">{t.name}</div>
+            <div className="text-xs text-zinc-400 mb-2 line-clamp-2">{t.description}</div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="rounded-full bg-zinc-800 px-2 py-1 text-zinc-400">{t.language}</span>
+              <span className="rounded-full bg-zinc-800 px-2 py-1 text-zinc-400">{t.category}</span>
+            </div>
+            {t.stars && (
+              <div className="mt-2 text-xs text-amber-400 flex items-center gap-1">
+                ⭐ {t.stars}
+              </div>
             )}
           </button>
         ))}
@@ -414,7 +365,7 @@ export default function IntakePage() {
       </div>
     </motion.div>,
 
-    // Step 7: Professional Details
+    // Step 6: Professional Details
     <motion.div
       key="details"
       initial={{ opacity: 0, x: 30 }}
@@ -486,7 +437,7 @@ export default function IntakePage() {
       </div>
     </motion.div>,
 
-    // Step 8: Dream Repos
+    // Step 7: Dream Repos
     <motion.div
       key="dreamrepos"
       initial={{ opacity: 0, x: 30 }}
@@ -541,7 +492,7 @@ export default function IntakePage() {
       </div>
     </motion.div>,
 
-    // Step 9: Social & Location
+    // Step 8: Social & Location
     <motion.div
       key="social"
       initial={{ opacity: 0, x: 30 }}
@@ -620,7 +571,6 @@ export default function IntakePage() {
     !!intake.goal,
     (intake.skills?.length ?? 0) > 0,
     !!intake.theme,
-    !!intake.avatar,
     (intake.selectedTemplates?.length ?? 0) > 0,
     true,
     true,
@@ -642,7 +592,7 @@ export default function IntakePage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Transform Your GitHub</h1>
           <p className="text-zinc-400">
-            Follow these 8 steps to build an amazing profile
+            Follow these 9 steps to build an amazing profile
           </p>
         </div>
 
@@ -677,7 +627,7 @@ export default function IntakePage() {
             Back
           </button>
 
-          {step < 9 ? (
+          {step < 8 ? (
             <button
               onClick={nextStep}
               disabled={!canNext}

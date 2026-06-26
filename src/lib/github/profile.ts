@@ -65,3 +65,27 @@ export async function getContributionCount(token: string): Promise<number> {
   // Approximate from public contributions (actual calendar requires GraphQL)
   return data.public_repos * 15;
 }
+
+export async function getAchievements(token: string, username: string): Promise<any[]> {
+  const octokit = createOctokit(token);
+  try {
+    // GitHub achievements are available via GraphQL, but we'll use REST approximation
+    // For now, return empty array - achievements require GraphQL API
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch achievements:", error);
+    return [];
+  }
+}
+
+export async function getActivityGraph(token: string, username: string): Promise<number[][]> {
+  const octokit = createOctokit(token);
+  try {
+    // Activity graph requires GraphQL - return empty for now
+    // This would need a GraphQL query to get the contribution calendar
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch activity graph:", error);
+    return [];
+  }
+}
