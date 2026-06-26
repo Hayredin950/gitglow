@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(file bin/claude)",
+      "Bash(ls -la bin/)",
+      "Bash(awk '/^Tip:/{p=1} p{print} /^[A-Z][^:]*:/ && !/^Tip:/{p=0}')",
+      "Bash(grep -v \"^$\")",
+      "Bash(find /home/hayredin/.nvm/versions/node/v24.14.0/lib/node_modules/@anthropic-ai -name \"*.json\" -o -name \"*tip*\" -o -name \"*hint*\" 2>/dev/null | head -20)",
+      "Read(//home/hayredin/.nvm/versions/node/v24.14.0/lib/node_modules/@anthropic-ai/**)"
+    ]
+  }
+}

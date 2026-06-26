@@ -1,15 +1,40 @@
 export interface UserIntake {
+  // Basic Info
   fullName: string;
   email: string;
-  goal: "job" | "opensource" | "portfolio" | "learning";
-  skills: string[];
-  projectIdea?: string;
-  tone: "professional" | "casual" | "hacker";
   location?: string;
   website?: string;
+  
+  // Professional
+  currentRole?: string;
+  company?: string;
+  experience?: string;
+  
+  // Skills & Goals
+  skills: string[];
+  goal: "job" | "opensource" | "portfolio" | "learning";
+  targetRole?: string;
+  
+  // Social
+  linkedin?: string;
+  twitter?: string;
+  
+  // Styling
   avatar: "professional" | "creative" | "classic";
-  useTemplate: boolean;
-  templateName?: "node-rest-api" | "python-utility" | "portfolio" | "nlp-toolkit" | "cache-store" | "delivery-api" | "calorie-tracker";
+  theme: "tokyo-night" | "dracula" | "gradient" | "minimal";
+  
+  // Templates (user can choose up to 5)
+  selectedTemplates: string[];
+  
+  // Dream Repos (up to 5 repos to fork)
+  dreamRepos: string[];
+  
+  // Contribution targets
+  targetContributions: number;
+  targetRepos: number;
+  
+  // Script-based approach flag
+  scriptBased?: boolean;
 }
 
 export interface ScoreBreakdown {
@@ -62,6 +87,9 @@ export interface GeneratedProject {
   description: string;
   topics: string[];
   files: Record<string, string>;
+  language?: string;
+  category?: string;
+  type?: string;
 }
 
 export interface CommitPlan {

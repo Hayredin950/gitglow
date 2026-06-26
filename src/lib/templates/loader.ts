@@ -1,6 +1,6 @@
 import type { GeneratedProject } from "@/types/polish";
 
-// Template definitions with metadata
+// Premium template definitions with stunning designs
 export const TEMPLATES: Record<
   string,
   {
@@ -8,6 +8,9 @@ export const TEMPLATES: Record<
     description: string;
     language: string;
     type: string;
+    category: "backend" | "frontend" | "fullstack" | "devops" | "ml" | "mobile";
+    difficulty: "beginner" | "intermediate" | "advanced";
+    popularity: number;
     files: Record<string, string>;
   }
 > = {
@@ -16,6 +19,9 @@ export const TEMPLATES: Record<
     description: "⚡ Production-ready REST API with JWT authentication, MongoDB integration, comprehensive error handling, and Docker support — perfect for full-stack backend development",
     language: "JavaScript",
     type: "api",
+    category: "backend",
+    difficulty: "intermediate",
+    popularity: 95,
     files: {
       "package.json": `{
   "name": "rest-api-backend",
@@ -179,6 +185,9 @@ module.exports = { verifyToken };`,
     description: "🐍 Professional Python CLI toolkit with Click interface, robust error handling, logging, and configuration management — ideal for automation scripts and developer tools",
     language: "Python",
     type: "cli",
+    category: "backend",
+    difficulty: "beginner",
+    popularity: 88,
     files: {
       "requirements.txt": `click==8.1.3
 colorama==0.4.6
@@ -304,6 +313,9 @@ def write_file(filepath, content):
     description: "🌐 Modern, responsive portfolio website built with Next.js 14, React 18, and Tailwind CSS — featuring dark/light mode, project showcase, and optimized performance for developer portfolios",
     language: "JavaScript",
     type: "web-app",
+    category: "frontend",
+    difficulty: "intermediate",
+    popularity: 92,
     files: {
       "package.json": `{
   "name": "portfolio-website",
@@ -415,6 +427,9 @@ Visit http://localhost:3000
     description: "🧠 Comprehensive Natural Language Processing library featuring text tokenization, sentiment analysis, named entity recognition, and text classification — built with NLTK and scikit-learn for ML-powered text analytics",
     language: "Python",
     type: "library",
+    category: "ml",
+    difficulty: "advanced",
+    popularity: 85,
     files: {
       "requirements.txt": `nltk==3.8.1
 numpy==1.24.3
@@ -509,6 +524,9 @@ class Analyzer:
     description: "⚡ High-performance in-memory cache store with TTL support, LRU eviction policy, and thread-safe operations — a lightweight Redis alternative for Python applications requiring fast data caching",
     language: "Python",
     type: "library",
+    category: "backend",
+    difficulty: "intermediate",
+    popularity: 80,
     files: {
       "requirements.txt": `python-dateutil==2.8.2`,
       ".gitignore": `__pycache__/
@@ -615,6 +633,9 @@ class CacheStore:
     description: "🚚 Full-featured delivery tracking system with real-time status updates, route optimization, and comprehensive logistics management — built for e-commerce and delivery service applications",
     language: "JavaScript",
     type: "api",
+    category: "backend",
+    difficulty: "advanced",
+    popularity: 78,
     files: {
       "package.json": `{
   "name": "delivery-tracking-api",
@@ -764,6 +785,9 @@ app.listen(PORT, () => {
     description: "🥗 Comprehensive calorie tracking and nutrition management application with meal logging, calorie goals, and nutritional analysis — built for health-conscious users and fitness enthusiasts",
     language: "JavaScript",
     type: "web-app",
+    category: "frontend",
+    difficulty: "intermediate",
+    popularity: 82,
     files: {
       "package.json": `{
   "name": "calorie-tracker",
@@ -919,6 +943,596 @@ export default function Home() {
 }`,
     },
   },
+  "react-dashboard": {
+    name: "React Analytics Dashboard",
+    description: "📊 Beautiful analytics dashboard with real-time data visualization, charts, and responsive design — built with React, D3.js, and modern CSS Grid layout",
+    language: "JavaScript",
+    type: "web-app",
+    category: "frontend",
+    difficulty: "intermediate",
+    popularity: 90,
+    files: {
+      "package.json": `{
+  "name": "react-analytics-dashboard",
+  "version": "1.0.0",
+  "description": "Beautiful analytics dashboard with real-time data",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.8.0",
+    "lucide-react": "^0.263.1"
+  },
+  "devDependencies": {
+    "vite": "^4.4.0",
+    "@vitejs/plugin-react": "^4.0.0"
+  }
+}`,
+      ".gitignore": `node_modules/
+dist/
+.env
+.DS_Store`,
+      "LICENSE": `MIT License
+
+Copyright (c) 2024
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.`,
+      "README.md": `# 📊 React Analytics Dashboard
+
+Beautiful analytics dashboard with real-time data visualization
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React-18.2-blue)](https://reactjs.org)
+[![Vite](https://img.shields.io/badge/Vite-4.4-646CFF)](https://vitejs.dev)
+[![Charts](https://img.shields.io/badge/Charts-Recharts-green)](https://recharts.org)
+
+## Features
+
+- Real-time data visualization
+- Interactive charts
+- Responsive design
+- Dark/Light mode
+- Export functionality
+- Custom widgets
+
+## Getting Started
+
+\`\`\`bash
+npm install
+npm run dev
+\`\`\`
+
+Visit http://localhost:5173
+
+## Tech Stack
+
+- React 18
+- Vite
+- Recharts
+- Lucide Icons
+- CSS Grid
+`,
+      "src/App.jsx": `import { useState } from 'react';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { Users, DollarSign, TrendingUp, Activity } from 'lucide-react';
+
+function App() {
+  const [darkMode, setDarkMode] = useState(false);
+
+  const salesData = [
+    { name: 'Jan', sales: 4000, profit: 2400 },
+    { name: 'Feb', sales: 3000, profit: 1398 },
+    { name: 'Mar', sales: 2000, profit: 9800 },
+    { name: 'Apr', sales: 2780, profit: 3908 },
+    { name: 'May', sales: 1890, profit: 4800 },
+    { name: 'Jun', sales: 2390, profit: 3800 },
+  ];
+
+  const userGrowth = [
+    { name: 'Week 1', users: 400 },
+    { name: 'Week 2', users: 700 },
+    { name: 'Week 3', users: 1200 },
+    { name: 'Week 4', users: 1800 },
+  ];
+
+  const categoryData = [
+    { name: 'Electronics', value: 400 },
+    { name: 'Clothing', value: 300 },
+    { name: 'Food', value: 200 },
+    { name: 'Other', value: 100 },
+  ];
+
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+
+  const stats = [
+    { icon: Users, label: 'Total Users', value: '18,450', change: '+12%' },
+    { icon: DollarSign, label: 'Revenue', value: '$45,231', change: '+8%' },
+    { icon: TrendingUp, label: 'Growth', value: '23.5%', change: '+5%' },
+    { icon: Activity, label: 'Active', value: '573', change: '+2%' },
+  ];
+
+  return (
+    <div className={\`min-h-screen \${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50'}\`}>
+      <nav className="bg-white dark:bg-gray-800 shadow-sm p-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
+        <button 
+          onClick={() => setDarkMode(!darkMode)}
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white"
+        >
+          {darkMode ? '☀️ Light' : '🌙 Dark'}
+        </button>
+      </nav>
+
+      <main className="p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat, index) => (
+            <div key={index} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <stat.icon className="w-8 h-8 text-blue-600" />
+                <span className="text-green-500 text-sm">{stat.change}</span>
+              </div>
+              <div className="text-3xl font-bold mb-1">{stat.value}</div>
+              <div className="text-gray-500">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
+            <h3 className="text-xl font-semibold mb-4">Sales Overview</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={salesData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="sales" fill="#3B82F6" />
+                <Bar dataKey="profit" fill="#10B981" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
+            <h3 className="text-xl font-semibold mb-4">User Growth</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={userGrowth}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="users" stroke="#3B82F6" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
+          <h3 className="text-xl font-semibold mb-4">Category Distribution</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={categoryData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => \`\${name} \${(percent * 100).toFixed(0)}%\`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {categoryData.map((entry, index) => (
+                  <Cell key={\`cell-\${index}\`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default App;`,
+      "src/main.jsx": `import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)`,
+      "src/index.css": `* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}`,
+      "index.html": `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analytics Dashboard</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>`,
+    },
+  },
+  "devops-pipeline": {
+    name: "DevOps CI/CD Pipeline",
+    description: "🔧 Complete DevOps pipeline with GitHub Actions, Docker, Kubernetes, and automated testing — essential infrastructure for modern software development workflows",
+    language: "YAML",
+    type: "devops",
+    category: "devops",
+    difficulty: "advanced",
+    popularity: 87,
+    files: {
+      ".github/workflows/ci.yml": `name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
+      - name: Run linter
+        run: npm run lint
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker image
+        run: docker build -t myapp:\${{ github.sha }} .
+      - name: Push to registry
+        run: docker push myapp:\${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to production
+        run: echo "Deploying to production"`,
+      "Dockerfile": `FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["npm", "start"]`,
+      "docker-compose.yml": `version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - redis
+      - postgres
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: myapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:`,
+      "k8s/deployment.yaml": `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:latest
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"`,
+      "k8s/service.yaml": `apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+spec:
+  selector:
+    app: myapp
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+  type: LoadBalancer`,
+      ".gitignore": `node_modules/
+.env
+.DS_Store
+*.log
+dist/
+build/`,
+      "LICENSE": `MIT License
+
+Copyright (c) 2024
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.`,
+      "README.md": `# 🔧 DevOps CI/CD Pipeline
+
+Complete DevOps pipeline with GitHub Actions, Docker, and Kubernetes
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-blue)](https://github.com/features/actions)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)](https://docker.com)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-326CE5)](https://kubernetes.io)
+
+## Features
+
+- Automated CI/CD pipeline
+- Docker containerization
+- Kubernetes deployment
+- Automated testing
+- Multi-environment support
+- Rolling updates
+
+## Getting Started
+
+\`\`\`bash
+# Build Docker image
+docker build -t myapp:latest .
+
+# Run with Docker Compose
+docker-compose up -d
+
+# Deploy to Kubernetes
+kubectl apply -f k8s/
+\`\`\`
+
+## Tech Stack
+
+- GitHub Actions
+- Docker
+- Docker Compose
+- Kubernetes
+- PostgreSQL
+- Redis
+`,
+    },
+  },
+  "mobile-app": {
+    name: "React Native Mobile App",
+    description: "📱 Cross-platform mobile application with React Native, featuring beautiful UI, offline support, and push notifications — perfect for iOS and Android development",
+    language: "JavaScript",
+    type: "mobile",
+    category: "mobile",
+    difficulty: "intermediate",
+    popularity: 89,
+    files: {
+      "package.json": `{
+  "name": "mobile-app",
+  "version": "1.0.0",
+  "description": "Cross-platform mobile application",
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start",
+    "test": "jest"
+  },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-native": "0.72.0",
+    "@react-navigation/native": "^6.0.0",
+    "@react-navigation/stack": "^6.0.0",
+    "react-native-vector-icons": "^10.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "babel-jest": "^29.2.0",
+    "jest": "^29.2.0"
+  }
+}`,
+      ".gitignore": `node_modules/
+.expo/
+dist/
+.webpack/
+.env
+.DS_Store`,
+      "LICENSE": `MIT License
+
+Copyright (c) 2024
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.`,
+      "README.md": `# 📱 React Native Mobile App
+
+Cross-platform mobile application with beautiful UI
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![React Native](https://img.shields.io/badge/React_Native-0.72-61DAFB)](https://reactnative.dev)
+[![iOS](https://img.shields.io/badge/iOS-Ready-000000)](https://apple.com)
+[![Android](https://img.shields.io/badge/Android-Ready-3DDC84)](https://android.com)
+
+## Features
+
+- Cross-platform (iOS & Android)
+- Beautiful UI components
+- Offline support
+- Push notifications
+- Navigation
+- State management
+
+## Getting Started
+
+\`\`\`bash
+npm install
+npm run android  # or npm run ios
+\`\`\`
+
+## Tech Stack
+
+- React Native
+- React Navigation
+- Vector Icons
+- Native Modules
+`,
+      "App.js": `import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+
+const Stack = createStackNavigator();
+
+function HomeScreen({ navigation }) {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Welcome to Mobile App</Text>
+      <TouchableOpacity 
+        style={styles.button}
+        onPress={() => navigation.navigate('Details')}
+      >
+        <Text style={styles.buttonText}>Get Started</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function DetailsScreen() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Details Screen</Text>
+      <Text style={styles.text}>This is a beautiful mobile app template</Text>
+    </View>
+  );
+}
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Details" component={DetailsScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+  },
+  text: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 10,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});`,
+      "app.json": `{
+  "name": "MobileApp",
+  "displayName": "Mobile App",
+  "version": "1.0.0",
+  "description": "A beautiful mobile application"
+}`,
+    },
+  },
 };
 
 export function getTemplate(
@@ -936,6 +1550,9 @@ export function getTemplate(
       "gitglow",
     ],
     files: template.files,
+    language: template.language,
+    category: template.category,
+    type: template.type,
   };
 }
 
@@ -946,5 +1563,8 @@ export function listTemplates() {
     description: template.description,
     language: template.language,
     type: template.type,
+    category: template.category,
+    difficulty: template.difficulty,
+    popularity: template.popularity,
   }));
 }

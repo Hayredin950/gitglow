@@ -76,6 +76,8 @@ model Polish {
   shareCardUrl    String?
   shareToken      String?      @unique
   isPublic        Boolean      @default(false)
+  scriptResult    Json?
+  executionScript String?      @db.Text
   createdAt       DateTime     @default(now())
   completedAt     DateTime?
 }
@@ -90,6 +92,7 @@ model Analytics {
 
 enum PolishStatus {
   PENDING
+  READY
   ANALYZING
   GENERATING
   AWAITING_APPROVAL

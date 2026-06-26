@@ -20,6 +20,9 @@ interface GenerationState {
   weaknesses: Weakness[];
   error: string | null;
   messages: string[];
+  scriptBased?: boolean;
+  scriptResult?: any;
+  selectedTemplates?: string[];
 }
 
 function PreviewContent() {
@@ -40,7 +43,7 @@ function PreviewContent() {
     messages: [],
   });
 
-  const [intakeData, setIntakeData] = useState<{ fullName?: string; avatar?: AvatarStyle; email?: string } | null>(null);
+  const [intakeData, setIntakeData] = useState<{ fullName?: string; avatar?: AvatarStyle; email?: string; scriptBased?: boolean; selectedTemplates?: string[] } | null>(null);
 
   useEffect(() => {
     if (!polishId) { router.push("/intake"); return; }
@@ -50,71 +53,97 @@ function PreviewContent() {
     if (!intake) { router.push("/intake"); return; }
 
     try {
-      const parsed = JSON.parse(intake) as { fullName?: string; avatar?: AvatarStyle; email?: string };
+      const parsed = JSON.parse(intake) as { fullName?: string; avatar?: AvatarStyle; email?: string; scriptBased?: boolean; selectedTemplates?: string[] };
       setIntakeData(parsed);
-    } catch { /* ignore */ }
+      
+      // Check if script-based approach
+      if (parsed.scriptBased) {
+        // For script-based, load from database instead of streaming
+        setState((s) => ({ ...s, status: "generating", scriptBased: true, selectedTemplates: parsed.selectedTemplates }));
+        
+        fetch(`/api/polish/${polishId}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.scriptResult) {
+              setState((s) => ({
+                ...s,
+                status: "done",
+                readme: data.scriptResult.readme || "",
+                bio: data.scriptResult.profileUpdate?.bio || "",
+                scriptResult: data.scriptResult,
+                commitPlan: [], // Will be generated during deploy
+                messages: ["Script-based profile generated successfully"],
+              }));
+            } else {
+              setState((s) => ({ ...s, status: "error", error: "Failed to load script result" }));
+            }
+          })
+          .catch(() => setState((s) => ({ ...s, status: "error", error: "Failed to load from database" })));
+      } else {
+        // Original AI-based streaming approach
+        setState((s) => ({ ...s, status: "generating" }));
 
-    setState((s) => ({ ...s, status: "generating" }));
+        fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ intake: JSON.parse(intake) as unknown, polishId }),
+        }).then((res) => {
+          const reader = res.body?.getReader();
+          if (!reader) return;
+          readerRef.current = reader;
+          const decoder = new TextDecoder();
 
-    fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ intake: JSON.parse(intake) as unknown, polishId }),
-    }).then((res) => {
-      const reader = res.body?.getReader();
-      if (!reader) return;
-      readerRef.current = reader;
-      const decoder = new TextDecoder();
+          function pump() {
+            reader!.read().then(({ done, value }) => {
+              if (done) { setState((s) => ({ ...s, status: "done" })); return; }
 
-      function pump() {
-        reader!.read().then(({ done, value }) => {
-          if (done) { setState((s) => ({ ...s, status: "done" })); return; }
+              const text = decoder.decode(value);
+              const lines = text.split("\n").filter((l) => l.startsWith("data: "));
 
-          const text = decoder.decode(value);
-          const lines = text.split("\n").filter((l) => l.startsWith("data: "));
+              for (const line of lines) {
+                try {
+                  const { event, data } = JSON.parse(line.slice(6)) as {
+                    event: string;
+                    data: Record<string, unknown>;
+                  };
 
-          for (const line of lines) {
-            try {
-              const { event, data } = JSON.parse(line.slice(6)) as {
-                event: string;
-                data: Record<string, unknown>;
-              };
+                  setState((s) => {
+                    switch (event) {
+                      case "status":
+                        return { ...s, messages: [...s.messages, data.message as string] };
+                      case "analyze_complete":
+                        return {
+                          ...s,
+                          scoreBefore: (data.score as ScoreBreakdown).total,
+                          weaknesses: data.weaknesses as Weakness[],
+                        };
+                      case "bio_complete":
+                        return { ...s, bio: data.bio as string };
+                      case "readme_chunk":
+                        return { ...s, readme: s.readme + (data.chunk as string) };
+                      case "project_complete":
+                        return { ...s, project: data.project as GeneratedProject };
+                      case "commits_planned":
+                        return { ...s, commitPlan: data.plan as CommitPlan[] };
+                      case "generate_complete":
+                        return { ...s, status: "done" };
+                      case "error":
+                        return { ...s, status: "error", error: data.message as string };
+                      default:
+                        return s;
+                    }
+                  });
+                } catch { /* skip malformed chunks */ }
+              }
 
-              setState((s) => {
-                switch (event) {
-                  case "status":
-                    return { ...s, messages: [...s.messages, data.message as string] };
-                  case "analyze_complete":
-                    return {
-                      ...s,
-                      scoreBefore: (data.score as ScoreBreakdown).total,
-                      weaknesses: data.weaknesses as Weakness[],
-                    };
-                  case "bio_complete":
-                    return { ...s, bio: data.bio as string };
-                  case "readme_chunk":
-                    return { ...s, readme: s.readme + (data.chunk as string) };
-                  case "project_complete":
-                    return { ...s, project: data.project as GeneratedProject };
-                  case "commits_planned":
-                    return { ...s, commitPlan: data.plan as CommitPlan[] };
-                  case "generate_complete":
-                    return { ...s, status: "done" };
-                  case "error":
-                    return { ...s, status: "error", error: data.message as string };
-                  default:
-                    return s;
-                }
-              });
-            } catch { /* skip malformed chunks */ }
+              pump();
+            }).catch(() => setState((s) => ({ ...s, status: "error", error: "Stream disconnected" })));
           }
 
           pump();
-        }).catch(() => setState((s) => ({ ...s, status: "error", error: "Stream disconnected" })));
+        }).catch(() => setState((s) => ({ ...s, status: "error", error: "Failed to connect" })));
       }
-
-      pump();
-    }).catch(() => setState((s) => ({ ...s, status: "error", error: "Failed to connect" })));
+    } catch { /* ignore */ }
 
     return () => { readerRef.current?.cancel().catch(() => {}); };
   }, [polishId, router]);
@@ -133,6 +162,8 @@ function PreviewContent() {
       email: intakeData.email,
       avatar: intakeData.avatar,
       templateName: intakeData.templateName,
+      scriptBased: state.scriptBased,
+      selectedTemplates: state.selectedTemplates,
     }));
     router.push(`/deploy?polishId=${polishId}`);
   }
@@ -280,6 +311,95 @@ function PreviewContent() {
               {" "}commits planned across the past year.
             </p>
             <p className="text-xs text-zinc-500 mt-1">Spread naturally — more on weekdays, realistic gaps on weekends.</p>
+          </motion.div>
+        )}
+
+        {/* Script-based information */}
+        {state.scriptBased && state.scriptResult && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 glass rounded-2xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Eye className="h-4 w-4 text-blue-400" />
+              <h3 className="font-semibold text-sm text-zinc-400 uppercase tracking-wider">Script-Based Profile Plan</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Templates */}
+              {state.selectedTemplates && state.selectedTemplates.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-zinc-300 mb-2">Selected Templates ({state.selectedTemplates.length})</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {state.selectedTemplates.map((template, index) => (
+                      <span key={index} className="rounded-full bg-blue-600/20 border border-blue-600/30 px-3 py-1 text-sm text-blue-300">
+                        {template}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Contribution Plan */}
+              {state.scriptResult.contributionPlan && (
+                <div>
+                  <h4 className="text-sm font-medium text-zinc-300 mb-2">Contribution Plan</h4>
+                  <p className="text-zinc-400">
+                    <span className="text-xl font-bold text-blue-400">{state.scriptResult.contributionPlan.totalContributions}</span>
+                    {" "}total contributions planned
+                  </p>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Status: {state.scriptResult.contributionPlan.validation.valid ? '✅ Valid' : '❌ Invalid'}
+                  </p>
+                </div>
+              )}
+
+              {/* Dream Repos */}
+              {state.scriptResult.dreamRepos && state.scriptResult.dreamRepos.valid.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-zinc-300 mb-2">Dream Repos to Fork ({state.scriptResult.dreamRepos.valid.length})</h4>
+                  <div className="space-y-2">
+                    {state.scriptResult.dreamRepos.valid.map((repo: any, index: number) => (
+                      <div key={index} className="text-sm text-zinc-400">
+                        {repo.owner}/{repo.repo}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-zinc-500 mt-2">
+                    Estimated time: {state.scriptResult.dreamRepos.complexity.estimatedTime}
+                  </p>
+                </div>
+              )}
+
+              {/* Repo Metadata */}
+              {state.scriptResult.repoMetadata && state.scriptResult.repoMetadata.repos.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-zinc-300 mb-2">Template Repos to Create ({state.scriptResult.repoMetadata.repos.length})</h4>
+                  <div className="space-y-2">
+                    {state.scriptResult.repoMetadata.repos.map((repo: any, index: number) => (
+                      <div key={index} className="text-sm text-zinc-400">
+                        <span className="font-medium text-zinc-300">{repo.name}</span>
+                        <p className="text-xs text-zinc-500 mt-1">{repo.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-zinc-500 mt-2">
+                    All repos include MIT License and Premium README
+                  </p>
+                </div>
+              )}
+
+              {/* Errors/Warnings */}
+              {state.scriptResult.errors && state.scriptResult.errors.length > 0 && (
+                <div className="rounded-lg bg-yellow-600/10 border border-yellow-600/20 p-3">
+                  <h4 className="text-sm font-medium text-yellow-400 mb-2">Warnings</h4>
+                  <ul className="space-y-1">
+                    {state.scriptResult.errors.map((error: string, index: number) => (
+                      <li key={index} className="text-xs text-yellow-300">
+                        ⚠️ {error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ArrowLeft, Check, Mail, Palette, Zap } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, Mail, Palette } from "lucide-react";
 import type { UserIntake } from "@/types/polish";
 import { getAvatarURL, getAvatarInfo } from "@/lib/avatars";
 import { listTemplates } from "@/lib/templates/loader";
@@ -22,10 +22,11 @@ const GOALS = [
   { value: "learning", label: "Document my learning journey", emoji: "📚" },
 ] as const;
 
-const TONES = [
-  { value: "professional", label: "Professional", desc: "Clean, impressive to Fortune 500 recruiters" },
-  { value: "casual", label: "Casual", desc: "Friendly, relatable dev community feel" },
-  { value: "hacker", label: "Hacker", desc: "Technical, cyberpunk aesthetic" },
+const THEMES = [
+  { value: "tokyo-night", label: "Tokyo Night", desc: "Modern dark theme with purple accents" },
+  { value: "dracula", label: "Dracula", desc: "Classic dark theme with vibrant colors" },
+  { value: "gradient", label: "Gradient", desc: "Beautiful gradient backgrounds" },
+  { value: "minimal", label: "Minimal", desc: "Clean and simple light theme" },
 ] as const;
 
 const AVATAR_CHOICES = [
@@ -36,26 +37,30 @@ const AVATAR_CHOICES = [
 
 const TEMPLATES_LIST = listTemplates();
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export default function IntakePage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [intake, setIntake] = useState<Partial<UserIntake>>({
     skills: [],
-    tone: "professional",
     goal: "job",
     avatar: "professional",
-    useTemplate: false,
+    theme: "tokyo-night",
+    selectedTemplates: [],
+    dreamRepos: [],
+    targetContributions: 400,
+    targetRepos: 5,
+    scriptBased: true,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const totalSteps = 8;
+  const totalSteps = 10;
   const progress = ((step + 1) / totalSteps) * 100;
 
   function nextStep() {
-    setStep((s) => Math.min(s + 1, 7) as Step);
+    setStep((s) => Math.min(s + 1, 9) as Step);
   }
   function prevStep() {
     setStep((s) => Math.max(s - 1, 0) as Step);
@@ -69,6 +74,38 @@ export default function IntakePage() {
         skills: skills.includes(skill)
           ? skills.filter((s) => s !== skill)
           : [...skills, skill],
+      };
+    });
+  }
+
+  function toggleTemplate(templateId: string) {
+    setIntake((prev) => {
+      const templates = prev.selectedTemplates ?? [];
+      return {
+        ...prev,
+        selectedTemplates: templates.includes(templateId)
+          ? templates.filter((t) => t !== templateId)
+          : [...templates, templateId].slice(0, 5),
+      };
+    });
+  }
+
+  function addDreamRepo(repo: string) {
+    setIntake((prev) => {
+      const repos = prev.dreamRepos ?? [];
+      if (repo && !repos.includes(repo) && repos.length < 5) {
+        return { ...prev, dreamRepos: [...repos, repo] };
+      }
+      return prev;
+    });
+  }
+
+  function removeDreamRepo(index: number) {
+    setIntake((prev) => {
+      const repos = prev.dreamRepos ?? [];
+      return {
+        ...prev,
+        dreamRepos: repos.filter((_, i) => i !== index),
       };
     });
   }
@@ -243,9 +280,9 @@ export default function IntakePage() {
       </div>
     </motion.div>,
 
-    // Step 4: Tone
+    // Step 4: Theme Selection
     <motion.div
-      key="tone"
+      key="theme"
       initial={{ opacity: 0, x: 30 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -30 }}
@@ -253,19 +290,19 @@ export default function IntakePage() {
     >
       <div>
         <h2 className="text-2xl font-bold mb-2">
-          What&apos;s your preferred tone?
+          Choose your theme
         </h2>
         <p className="text-zinc-400 text-sm">
-          This sets the personality of your README and bio.
+          This sets the visual style of your README.
         </p>
       </div>
       <div className="space-y-3">
-        {TONES.map((t) => (
+        {THEMES.map((t) => (
           <button
             key={t.value}
-            onClick={() => setIntake((p) => ({ ...p, tone: t.value }))}
+            onClick={() => setIntake((p) => ({ ...p, theme: t.value }))}
             className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
-              intake.tone === t.value
+              intake.theme === t.value
                 ? "border-blue-500 bg-blue-600/10"
                 : "border-zinc-700 hover:border-zinc-500"
             }`}
@@ -274,7 +311,7 @@ export default function IntakePage() {
               <div className="font-medium">{t.label}</div>
               <div className="text-sm text-zinc-400">{t.desc}</div>
             </div>
-            {intake.tone === t.value && (
+            {intake.theme === t.value && (
               <Check className="h-4 w-4 text-blue-400" />
             )}
           </button>
@@ -335,7 +372,7 @@ export default function IntakePage() {
       </div>
     </motion.div>,
 
-    // Step 6: Template Selection
+    // Step 6: Template Selection (Multiple)
     <motion.div
       key="template"
       initial={{ opacity: 0, x: 30 }}
@@ -344,46 +381,21 @@ export default function IntakePage() {
       className="space-y-6"
     >
       <div>
-        <h2 className="text-2xl font-bold mb-2">Use a template or AI?</h2>
+        <h2 className="text-2xl font-bold mb-2">Select your templates</h2>
         <p className="text-zinc-400 text-sm">
-          Choose a pre-built project template or let AI generate one from scratch.
+          Choose up to 5 premium pre-built templates for your projects.
         </p>
       </div>
-      <div className="space-y-3">
-        <button
-          onClick={() =>
-            setIntake((p) => ({ ...p, useTemplate: false, templateName: undefined }))
-          }
-          className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
-            !intake.useTemplate
-              ? "border-blue-500 bg-blue-600/10"
-              : "border-zinc-700 hover:border-zinc-500"
-          }`}
-        >
-          <Zap className="h-5 w-5 flex-shrink-0" />
-          <div className="flex-1">
-            <div className="font-medium">AI Generation</div>
-            <div className="text-sm text-zinc-400">
-              Custom project generated with AI based on your skills
-            </div>
-          </div>
-          {!intake.useTemplate && <Check className="h-4 w-4 text-blue-400" />}
-        </button>
-
+      <div className="space-y-3 max-h-96 overflow-y-auto">
         {TEMPLATES_LIST.map((t) => (
           <button
             key={t.id}
-            onClick={() =>
-              setIntake((p) => ({
-                ...p,
-                useTemplate: true,
-                templateName: t.id as any,
-              }))
-            }
+            onClick={() => toggleTemplate(t.id)}
+            disabled={!intake.selectedTemplates?.includes(t.id) && (intake.selectedTemplates?.length ?? 0) >= 5}
             className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
-              intake.templateName === t.id
+              intake.selectedTemplates?.includes(t.id)
                 ? "border-blue-500 bg-blue-600/10"
-                : "border-zinc-700 hover:border-zinc-500"
+                : "border-zinc-700 hover:border-zinc-500 disabled:opacity-50"
             }`}
           >
             <div className="h-5 w-5 flex-shrink-0 text-base">📦</div>
@@ -391,15 +403,18 @@ export default function IntakePage() {
               <div className="font-medium">{t.name}</div>
               <div className="text-sm text-zinc-400">{t.description}</div>
             </div>
-            {intake.templateName === t.id && (
+            {intake.selectedTemplates?.includes(t.id) && (
               <Check className="h-4 w-4 text-blue-400" />
             )}
           </button>
         ))}
       </div>
+      <div className="text-sm text-zinc-500">
+        {intake.selectedTemplates?.length ?? 0}/5 selected
+      </div>
     </motion.div>,
 
-    // Step 7: Optional Details
+    // Step 7: Professional Details
     <motion.div
       key="details"
       initial={{ opacity: 0, x: 30 }}
@@ -408,8 +423,135 @@ export default function IntakePage() {
       className="space-y-6"
     >
       <div>
-        <h2 className="text-2xl font-bold mb-2">Final touches</h2>
-        <p className="text-zinc-400 text-sm">Add optional details to customize your profile.</p>
+        <h2 className="text-2xl font-bold mb-2">Professional details</h2>
+        <p className="text-zinc-400 text-sm">Add your professional background (optional).</p>
+      </div>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Current role (optional)
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. Senior Software Engineer"
+            value={intake.currentRole ?? ""}
+            onChange={(e) =>
+              setIntake((p) => ({ ...p, currentRole: e.target.value }))
+            }
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 outline-none focus:border-blue-500 transition-colors placeholder:text-zinc-600"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Company (optional)
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. Google"
+            value={intake.company ?? ""}
+            onChange={(e) =>
+              setIntake((p) => ({ ...p, company: e.target.value }))
+            }
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 outline-none focus:border-blue-500 transition-colors placeholder:text-zinc-600"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Experience (optional)
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. 5+ years"
+            value={intake.experience ?? ""}
+            onChange={(e) =>
+              setIntake((p) => ({ ...p, experience: e.target.value }))
+            }
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 outline-none focus:border-blue-500 transition-colors placeholder:text-zinc-600"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Target role (optional)
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. Staff Engineer"
+            value={intake.targetRole ?? ""}
+            onChange={(e) =>
+              setIntake((p) => ({ ...p, targetRole: e.target.value }))
+            }
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 outline-none focus:border-blue-500 transition-colors placeholder:text-zinc-600"
+          />
+        </div>
+      </div>
+    </motion.div>,
+
+    // Step 8: Dream Repos
+    <motion.div
+      key="dreamrepos"
+      initial={{ opacity: 0, x: 30 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -30 }}
+      className="space-y-6"
+    >
+      <div>
+        <h2 className="text-2xl font-bold mb-2">Add dream repos</h2>
+        <p className="text-zinc-400 text-sm">
+          Paste GitHub URLs of repos you admire (up to 5). We'll fork them for you.
+        </p>
+      </div>
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="https://github.com/username/repo"
+            id="dreamRepoInput"
+            className="flex-1 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 outline-none focus:border-blue-500 transition-colors placeholder:text-zinc-600"
+          />
+          <button
+            onClick={() => {
+              const input = document.getElementById('dreamRepoInput') as HTMLInputElement;
+              if (input) {
+                addDreamRepo(input.value);
+                input.value = '';
+              }
+            }}
+            disabled={(intake.dreamRepos?.length ?? 0) >= 5}
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium transition-colors"
+          >
+            Add
+          </button>
+        </div>
+        <div className="space-y-2">
+          {intake.dreamRepos?.map((repo, index) => (
+            <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-zinc-800 border border-zinc-700">
+              <span className="flex-1 text-sm truncate">{repo}</span>
+              <button
+                onClick={() => removeDreamRepo(index)}
+                className="text-red-400 hover:text-red-300 text-sm"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="text-sm text-zinc-500">
+          {intake.dreamRepos?.length ?? 0}/5 repos
+        </div>
+      </div>
+    </motion.div>,
+
+    // Step 9: Social & Location
+    <motion.div
+      key="social"
+      initial={{ opacity: 0, x: 30 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -30 }}
+      className="space-y-6"
+    >
+      <div>
+        <h2 className="text-2xl font-bold mb-2">Social & location</h2>
+        <p className="text-zinc-400 text-sm">Add your social links and location (optional).</p>
       </div>
       <div className="space-y-4">
         <div>
@@ -428,14 +570,28 @@ export default function IntakePage() {
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">
-            Project idea (optional)
+            LinkedIn (optional)
           </label>
           <input
-            type="text"
-            placeholder="e.g. AI chatbot, task management app"
-            value={intake.projectIdea ?? ""}
+            type="url"
+            placeholder="https://linkedin.com/in/yourname"
+            value={intake.linkedin ?? ""}
             onChange={(e) =>
-              setIntake((p) => ({ ...p, projectIdea: e.target.value }))
+              setIntake((p) => ({ ...p, linkedin: e.target.value }))
+            }
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 outline-none focus:border-blue-500 transition-colors placeholder:text-zinc-600"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Twitter (optional)
+          </label>
+          <input
+            type="url"
+            placeholder="https://twitter.com/yourname"
+            value={intake.twitter ?? ""}
+            onChange={(e) =>
+              setIntake((p) => ({ ...p, twitter: e.target.value }))
             }
             className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 outline-none focus:border-blue-500 transition-colors placeholder:text-zinc-600"
           />
@@ -463,9 +619,11 @@ export default function IntakePage() {
     !!intake.email?.trim(),
     !!intake.goal,
     (intake.skills?.length ?? 0) > 0,
-    !!intake.tone,
+    !!intake.theme,
     !!intake.avatar,
-    intake.useTemplate !== undefined,
+    (intake.selectedTemplates?.length ?? 0) > 0,
+    true,
+    true,
     true,
   ][step];
 
@@ -519,7 +677,7 @@ export default function IntakePage() {
             Back
           </button>
 
-          {step < 7 ? (
+          {step < 9 ? (
             <button
               onClick={nextStep}
               disabled={!canNext}

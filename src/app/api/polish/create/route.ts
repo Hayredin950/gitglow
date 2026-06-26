@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { UserIntake } from "@/types/polish";
+import { generateScriptBasedProfile } from "@/lib/scripts/orchestrator";
 
 export const dynamic = 'force-dynamic';
 
@@ -43,27 +44,50 @@ export async function POST(req: Request) {
       return Response.json({ error: "At least one skill is required" }, { status: 400 });
     }
 
-    if (!intake.tone) {
-      return Response.json({ error: "Tone preference is required" }, { status: 400 });
+    if (!intake.theme) {
+      return Response.json({ error: "Theme preference is required" }, { status: 400 });
+    }
+
+    if (!intake.avatar) {
+      return Response.json({ error: "Avatar preference is required" }, { status: 400 });
+    }
+
+    if (!Array.isArray(intake.selectedTemplates) || intake.selectedTemplates.length === 0) {
+      return Response.json({ error: "At least one template is required" }, { status: 400 });
     }
 
     console.log("[v0] Creating polish with intake:", {
       fullName: intake.fullName,
       goal: intake.goal,
       skillsCount: intake.skills.length,
-      tone: intake.tone,
+      theme: intake.theme,
+      templatesCount: intake.selectedTemplates.length,
     });
 
+    // Generate script-based profile
+    const sessionUser = session.user as { login?: string; id: string };
+    const githubProfile = {
+      login: sessionUser.login || userId,
+      id: userId,
+    } as any;
+    
+    const scriptResult = generateScriptBasedProfile(githubProfile, intake);
+    
     const polish = await db.polish.create({
       data: {
         userId,
         userIntake: intake as object,
-        status: "PENDING",
+        status: scriptResult.success ? "READY" : "FAILED",
+        scriptResult: scriptResult as object,
       },
     });
 
     console.log("[v0] Polish created successfully:", polish.id);
-    return Response.json({ polishId: polish.id });
+    return Response.json({ 
+      polishId: polish.id,
+      success: scriptResult.success,
+      summary: scriptResult,
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown server error";
     console.error("[v0] POST /api/polish/create error:", msg, err);
