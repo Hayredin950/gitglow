@@ -3275,46 +3275,6 @@ MIT`,
 }`,
     },
   },
-  // Additional real projects from repo.txt
-  "ps5-linux-loader": {
-    name: "PS5 Linux Loader",
-    description: "Linux payload implementing the HV exploit and a custom bootloader",
-    language: "C",
-    type: "system",
-    category: "backend",
-    difficulty: "advanced",
-    popularity: 85,
-    stars: 606,
-    url: "https://github.com/ps5-linux/ps5-linux-loader",
-    files: {
-      "README.md": `# PS5 Linux Loader
-
-Linux payload implementing the HV exploit and a custom bootloader.
-
-## Features
-
-- HV exploit implementation
-- Custom bootloader
-- Linux payload
-- System-level programming
-
-## Building
-
-\`\`\`bash
-make
-\`\`\`
-
-## License
-
-MIT`,
-      "src/main.c": `#include <stdio.h>
-
-int main() {
-    printf("PS5 Linux Loader\\n");
-    return 0;
-}`,
-    },
-  },
   "mhr-cfw": {
     name: "MHR CFW",
     description: "A Domain-Fronting Relay that routes traffic through GAS and forwards it to Cloudflare Workers",
