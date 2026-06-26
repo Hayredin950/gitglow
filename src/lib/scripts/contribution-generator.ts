@@ -24,10 +24,10 @@ export function generateContributionPlan(
   templates.forEach((template, index) => {
     const commits = Math.min(commitsPerTemplate, targetContributions - plans.reduce((sum, p) => sum + p.commits, 0));
     const startDate = new Date(now);
-    startDate.setDate(startDate.getDate() - 90); // Start 90 days ago
+    startDate.setDate(startDate.getDate() - 1095); // Start ~3 years ago
     
     const endDate = new Date(now);
-    endDate.setDate(endDate.getDate() - (index * 10)); // Stagger end dates
+    endDate.setDate(endDate.getDate() - (index * 30)); // Stagger end dates
     
     plans.push({
       templateName: template,

@@ -17,7 +17,6 @@ export function generatePremiumReadme(
     goal,
     location,
     website,
-    avatar,
     theme,
     currentRole,
     company,
@@ -28,7 +27,6 @@ export function generatePremiumReadme(
 
   const username = profile.login;
   const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  const avatarURL = getAvatarURL(avatar, initials);
 
   // Theme configurations
   const themes = {
@@ -83,17 +81,15 @@ export function generatePremiumReadme(
 
 ![Header](https://capsule-render.vercel.app/api?type=waving&color=gradient&height=250&section=header&text=${encodeURIComponent(fullName)}&fontSize=60&fontAlignY=40&animation=twinkling)
 
-<img src="${avatarURL}" alt="Profile Avatar" width="140" height="140" style="border-radius: 50%; border: 5px solid ${currentTheme.accent}; margin: 25px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-
 [![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&size=24&duration=3500&pause=1200&color=${currentTheme.accent}&center=true&vCenter=true&width=700&lines=${encodeURIComponent(goalHeaders[goal])};${encodeURIComponent(currentRole || "Software Developer")}${company ? `;@${company}` : ""};${encodeURIComponent("Let's build something amazing!")})](https://git.io/typing-svg)
 
 ${socialLinks.length > 0 ? `
 <div align="center">
 
-${socialLinks.join("  ")}
+${socialLinks.join('  ')}
 
 </div>
-` : ""}
+` : ''}
 
 </div>
 
@@ -107,7 +103,7 @@ ${socialLinks.join("  ")}
   "location": "${location || "Global"}",
   "skills": ${JSON.stringify(skills.slice(0, 6))},
   "goal": "${goal}",
-  "target": "${targetRole || "Excellence"}"${website ? `,\n  "website": "${website}"` : ""}${linkedin ? `,\n  "linkedin": "${linkedin}"` : ""}
+  "target": "${targetRole || "Excellence"}"${website ? `,\n  "website": "${website}"` : ''}${linkedin ? `,\n  "linkedin": "${linkedin}"` : ''}
 }
 \`\`\`
 
@@ -120,7 +116,7 @@ ${socialLinks.join("  ")}
 <div align="center">
 
 ![Stats](https://github-readme-stats.vercel.app/api?username=${username}&theme=${theme === "dracula" ? "dracula" : "tokyonight"}&show_icons=true&hide_border=true&count_private=true&include_all_commits=true)
-![Streak](https://streak-stats.demolab.com?user=${username}&theme=${theme === "dracula" ? "dracula" : "tokyonight"}&hide_border=true)
+![Streak](https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${theme === "dracula" ? "dracula" : "tokyonight"}&hide_border=true)
 ![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&theme=${theme === "dracula" ? "dracula" : "tokyonight"}&layout=compact&hide_border=true)
 
 </div>
@@ -159,16 +155,16 @@ ${goal === "job" ? `
 
 ## 📫 Let's Connect
 
-${company ? `**Currently at:** ${company}  \n` : ""}
-${location ? `**Based in:** ${location}  \n` : ""}
-${targetRole ? `**Interested in:** ${targetRole} roles  \n` : ""}
+${company ? `**Currently at:** ${company}  \n` : ''}
+${location ? `**Based in:** ${location}  \n` : ''}
+${targetRole ? `**Interested in:** ${targetRole} roles  \n` : ''}
 
 ---
 
 <div align="center">
 
 [![Polished by GitGlow](https://img.shields.io/badge/Polished%20by-GitGlow%20✨-3B82F6?style=flat-square)](https://gitglow-pi.vercel.app)
-${socialLinks.length > 0 ? socialLinks[0] : ""}
+${socialLinks.length > 0 ? socialLinks[0] : ''}
 
 **✨ Thank you for visiting! Feel free to reach out.**
 

@@ -192,15 +192,16 @@ export function generateCommitDates(baseDate: Date, count: number): Date[] {
   const now = baseDate;
   
   for (let i = 0; i < count; i++) {
-    // Generate dates over the past 90 days
-    const daysAgo = Math.floor(Math.random() * 90);
+    // Generate dates over the past 2-3 years
+    const daysAgo = Math.floor(Math.random() * 1095); // 3 years is ~1095 days
     const date = new Date(now);
     date.setDate(date.getDate() - daysAgo);
     
-    // Random time during the day
-    const hours = Math.floor(Math.random() * 12) + 9; // 9 AM to 8 PM
+    // Random time during the day (avoid late nights to look realistic)
+    const hours = Math.floor(Math.random() * 12) + 7; // 7 AM to 6 PM
     const minutes = Math.floor(Math.random() * 60);
-    date.setHours(hours, minutes);
+    const seconds = Math.floor(Math.random() * 60);
+    date.setHours(hours, minutes, seconds);
     
     dates.push(date);
   }
