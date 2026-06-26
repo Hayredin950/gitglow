@@ -1,12 +1,21 @@
-import Anthropic from "@anthropic-ai/sdk";
+// Using Vercel AI Gateway for all model requests
+// This provides better reliability, caching, and fallback support
+// The AI Gateway automatically handles:
+// - Request routing and optimization
+// - Rate limiting and retries
+// - Model availability and fallbacks
+// - Usage analytics and monitoring
 
-const globalForAI = globalThis as unknown as { anthropic: Anthropic };
+export const defaultModel = "anthropic/claude-3-5-sonnet";
 
-export const anthropic =
-  globalForAI.anthropic ||
-  new Anthropic({
+// Export a function for generating text that uses the gateway
+export async function generateText(prompt: string, system: string = "") {
+  const { generateText } = await import("ai");
+  
+  return generateText({
+    model: defaultModel,
+    system,
+    prompt,
     apiKey: process.env.ANTHROPIC_API_KEY,
-    baseURL: process.env.ANTHROPIC_BASE_URL ?? "https://cc.freemodel.dev",
   });
-
-if (process.env.NODE_ENV !== "production") globalForAI.anthropic = anthropic;
+}

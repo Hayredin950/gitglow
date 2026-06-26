@@ -6,8 +6,7 @@ import { generateBio } from "@/lib/ai/generators/bio";
 import { generateProject, inferProjectFromSkills } from "@/lib/ai/generators/project";
 import { generateCommitSchedule } from "@/lib/ai/generators/commits";
 import { db } from "@/lib/db";
-import type { UserIntake } from "@/types/polish";
-import type { GeneratedProject } from "@/types/polish";
+import type { UserIntake, GeneratedProject, CommitPlan } from "@/types/polish";
 
 export const dynamic = 'force-dynamic';
 

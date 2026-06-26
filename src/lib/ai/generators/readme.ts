@@ -1,4 +1,4 @@
-import { anthropic } from "@/lib/ai/client";
+import { generateText, defaultModel } from "@/lib/ai/client";
 import type { GitHubProfile } from "@/types/github";
 import type { UserIntake } from "@/types/polish";
 
@@ -49,20 +49,18 @@ Requirements (use ALL of these):
 
 Output ONLY the raw markdown, no explanation, no code fences around the whole thing.`;
 
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-5",
-    max_tokens: 4096,
-    messages: [
-      {
-        role: "user",
-        content: message,
-      },
-    ],
-    system: `You are an expert GitHub profile designer who creates stunning profile READMEs that get developers hired at top tech companies. You know every widget, badge, and trick to make a profile stand out. You generate complete, production-ready markdown that looks amazing on GitHub. All image URLs must be real, working URLs using the services listed.`,
-  });
-
-  const block = response.content[0];
-  return block.type === "text" ? block.text : "";
+  try {
+    const { generateText } = await import("ai");
+    const response = await generateText({
+      model: defaultModel,
+      prompt: message,
+      system: `You are an expert GitHub profile designer who creates stunning profile READMEs that get developers hired at top tech companies. You know every widget, badge, and trick to make a profile stand out. You generate complete, production-ready markdown that looks amazing on GitHub. All image URLs must be real, working URLs using the services listed.`,
+    });
+    return response.text;
+  } catch (err) {
+    console.error("[v0] README generation error:", err);
+    throw new Error("Failed to generate README");
+  }
 }
 
 export async function* streamProfileReadme(
@@ -77,30 +75,25 @@ export async function* streamProfileReadme(
     throw new Error("Invalid profile data: missing username or fullName");
   }
 
-  const stream = await anthropic.messages.stream({
-    model: "claude-sonnet-4-5",
-    max_tokens: 4096,
-    system: `You are an expert GitHub profile designer. Generate stunning profile READMEs that get developers hired. Output ONLY raw markdown, no explanations.`,
-    messages: [
-      {
-        role: "user",
-        content: `Generate a beautiful GitHub profile README for ${fullName} (username: ${username}). Skills: ${skillsStr}. Goal: ${goal}. Tone: ${tone}. Include: wave header (capsule-render), typing SVG, about-me JSON block, skill icons (skillicons.dev), GitHub stats, streak, top languages, activity graph, trophies, GitGlow badge at bottom, wave footer. Use tokyonight theme throughout. Output raw markdown only.`,
-      },
-    ],
-  });
+  try {
+    const { streamText } = await import("ai");
+    const stream = await streamText({
+      model: defaultModel,
+      system: `You are an expert GitHub profile designer. Generate stunning profile READMEs that get developers hired. Output ONLY raw markdown, no explanations.`,
+      prompt: `Generate a beautiful GitHub profile README for ${fullName} (username: ${username}). Skills: ${skillsStr}. Goal: ${goal}. Tone: ${tone}. Include: wave header (capsule-render), typing SVG, about-me JSON block, skill icons (skillicons.dev), GitHub stats, streak, top languages, activity graph, trophies, GitGlow badge at bottom, wave footer. Use tokyonight theme throughout. Output raw markdown only.`,
+    });
 
-  let contentGenerated = false;
-  for await (const chunk of stream) {
-    if (
-      chunk.type === "content_block_delta" &&
-      chunk.delta.type === "text_delta"
-    ) {
+    let contentGenerated = false;
+    for await (const chunk of stream.textStream) {
       contentGenerated = true;
-      yield chunk.delta.text;
+      yield chunk;
     }
-  }
 
-  if (!contentGenerated) {
-    throw new Error("README generation failed: no content produced");
+    if (!contentGenerated) {
+      throw new Error("README generation failed: no content produced");
+    }
+  } catch (err) {
+    console.error("[v0] Stream README generation error:", err);
+    throw new Error("Failed to stream README");
   }
 }
