@@ -233,6 +233,7 @@ export async function POST(req: Request) {
             commits.forEach((commit, j) => {
               commitPlanToUse.push({
                 repo: repoName,
+                date: dates[j].toISOString(),
                 path: `.gitkeep-${j}`,
                 content: `# Commit ${j + 1}\n\nGenerated contribution commit.`,
                 message: commit.message,
