@@ -108,16 +108,12 @@ dist/
   "name": "mike-legal-platform",
   "version": "1.0.0",
   "description": "OSS AI Legal Platform",
-  "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start"
-  },
-  "dependencies": {
     "next": "^14.0.0",
     "react": "^18.2.0",
     "typescript": "^5.0.0"
-  }
 }`,
       "README.md": `# Mike - OSS AI Legal Platform
 
@@ -166,13 +162,9 @@ MIT`,
   "version": "1.0.0",
   "description": "Chrome side-panel AI assistant",
   "manifest_version": 3,
-  "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch"
-  },
-  "dependencies": {
     "typescript": "^5.0.0"
-  }
 }`,
       "README.md": `# Chromex
 
@@ -215,15 +207,11 @@ MIT`,
   "name": "dbx",
   "version": "1.0.0",
   "description": "Cross-platform database client",
-  "scripts": {
     "dev": "vite",
     "build": "vite build",
     "tauri": "tauri"
-  },
-  "dependencies": {
     "vue": "^3.3.0",
     "tauri": "^1.5.0"
-  }
 }`,
       "README.md": `# DBX
 
@@ -285,14 +273,10 @@ MIT`,
   "name": "dictionary-of-ai-coding",
   "version": "1.0.0",
   "description": "AI coding jargon explained",
-  "scripts": {
     "dev": "next dev",
     "build": "next build"
-  },
-  "dependencies": {
     "next": "^14.0.0",
     "react": "^18.2.0"
-  }
 }`,
       "README.md": `# Dictionary of AI Coding
 
@@ -343,12 +327,8 @@ MIT`,
   "bin": {
     "serve-sim": "./bin/serve-sim"
   },
-  "scripts": {
     "build": "tsc"
-  },
-  "dependencies": {
     "typescript": "^5.0.0"
-  }
 }`,
       "README.md": `# Serve Sim
 
@@ -390,12 +370,8 @@ console.log('Serve Sim - Apple Simulator Launcher');`,
   "version": "1.0.0",
   "description": "Legacy system transformation for AI agents",
   "main": "src/index.js",
-  "scripts": {
     "test": "jest"
-  },
-  "dependencies": {
     "ast-parser": "^1.0.0"
-  }
 }`,
       "README.md": `# Reversa
 
@@ -440,14 +416,10 @@ MIT`,
   "name": "html-anything",
   "version": "1.0.0",
   "description": "Agentic HTML editor",
-  "scripts": {
     "dev": "next dev",
     "build": "next build"
-  },
-  "dependencies": {
     "next": "^14.0.0",
     "react": "^18.2.0"
-  }
 }`,
       "README.md": `# HTML Anything
 
@@ -782,13 +754,9 @@ if __name__ == '__main__':
   "name": "deepsec",
   "version": "1.0.0",
   "description": "Security harness for coding agents",
-  "scripts": {
     "build": "tsc",
     "scan": "node dist/index.js"
-  },
-  "dependencies": {
     "typescript": "^5.0.0"
-  }
 }`,
       "README.md": `# Deepsec
 
@@ -873,12 +841,8 @@ int main() {
   "version": "1.0.0",
   "description": "Unified Virtual Filesystem for AI Agents",
   "main": "src/index.ts",
-  "scripts": {
     "build": "tsc"
-  },
-  "dependencies": {
     "typescript": "^5.0.0"
-  }
 }`,
       "README.md": `# Mirage
 
@@ -974,15 +938,11 @@ class TokenSpeed:
   "name": "3dcellforge",
   "version": "1.0.0",
   "description": "AI-powered 3D cell generation",
-  "scripts": {
     "dev": "next dev",
     "build": "next build"
-  },
-  "dependencies": {
     "next": "^14.0.0",
     "react": "^18.2.0",
     "three": "^0.150.0"
-  }
 }`,
       "README.md": `# 3DCellForge
 
@@ -1119,16 +1079,12 @@ if __name__ == '__main__':
   "name": "cell-architecture-studio",
   "version": "1.0.0",
   "description": "Interactive 3D cell architecture gallery",
-  "scripts": {
     "dev": "next dev",
     "build": "next build"
-  },
-  "dependencies": {
     "next": "^14.0.0",
     "react": "^18.2.0",
     "three": "^0.150.0",
     "@react-three/fiber": "^8.0.0"
-  }
 }`,
       "README.md": `# Cell Architecture Studio
 
@@ -1216,13 +1172,9 @@ int main() {
   "version": "1.0.0",
   "description": "Test runner for AI agent skills",
   "main": "src/index.ts",
-  "scripts": {
     "test": "jest",
     "build": "tsc"
-  },
-  "dependencies": {
     "typescript": "^5.0.0"
-  }
 }`,
       "README.md": `# Agent Skills Eval
 
@@ -1386,12 +1338,8 @@ MIT`,
   "version": "1.0.0",
   "description": "Unified storage SDK",
   "main": "src/index.ts",
-  "scripts": {
     "build": "tsc"
-  },
-  "dependencies": {
     "typescript": "^5.0.0"
-  }
 }`,
       "README.md": `# Files SDK
 
@@ -1490,13 +1438,9 @@ struct ContentView: View {
   "version": "1.0.0",
   "description": "Uniswap V3 pool inspection toolkit",
   "main": "src/index.ts",
-  "scripts": {
     "build": "tsc"
-  },
-  "dependencies": {
     "typescript": "^5.0.0",
     "ethers": "^6.0.0"
-  }
 }`,
       "README.md": `# Uniswap V3 Pool Lens
 
@@ -1943,14 +1887,10 @@ int main() {
   "name": "petdex",
   "version": "1.0.0",
   "description": "Public gallery of animated Codex pets",
-  "scripts": {
     "dev": "next dev",
     "build": "next build"
-  },
-  "dependencies": {
     "next": "^14.0.0",
     "react": "^18.2.0"
-  }
 }`,
       "README.md": `# PetDex
 
@@ -2043,12 +1983,8 @@ if __name__ == '__main__':
   "version": "1.0.0",
   "description": "Claude Code with DeepSeek V4 Pro",
   "main": "src/index.js",
-  "scripts": {
     "start": "node src/index.js"
-  },
-  "dependencies": {
     "openai": "^4.0.0"
-  }
 }`,
       "README.md": `# DeepClaude
 
@@ -2169,12 +2105,8 @@ func main() {
   "version": "1.0.0",
   "description": "Codex++ tweak system",
   "main": "src/index.ts",
-  "scripts": {
     "build": "tsc"
-  },
-  "dependencies": {
     "typescript": "^5.0.0"
-  }
 }`,
       "README.md": `# Codex++
 
@@ -2265,9 +2197,7 @@ def create_ppt(images):
   "version": "1.0.0",
   "description": "Codex startup pressure testing",
   "main": "src/index.js",
-  "scripts": {
     "test": "node src/index.js"
-  }
 }`,
       "README.md": `# Codex Startup Pressure Test
 
@@ -2309,9 +2239,7 @@ MIT`,
   "version": "1.0.0",
   "description": "Codex complexity optimization",
   "main": "src/index.js",
-  "scripts": {
     "optimize": "node src/index.js"
-  }
 }`,
       "README.md": `# Codex Complexity Optimizer
 
@@ -3236,12 +3164,8 @@ int main() {
   "version": "1.0.0",
   "description": "AI-powered reflection tool",
   "main": "src/index.ts",
-  "scripts": {
     "build": "tsc"
-  },
-  "dependencies": {
     "typescript": "^5.0.0"
-  }
 }`,
       "README.md": `# Mirrai
 
@@ -3275,42 +3199,6 @@ MIT`,
 }`,
     },
   },
-  "mhr-cfw": {
-    name: "MHR CFW",
-    description: "A Domain-Fronting Relay that routes traffic through GAS and forwards it to Cloudflare Workers",
-    language: "Python",
-    type: "network",
-    category: "backend",
-    difficulty: "advanced",
-    popularity: 82,
-    stars: 611,
-    url: "https://github.com/denuitt1/mhr-cfw",
-    files: {
-      "README.md": `# MHR CFW
-
-Domain-Fronting Relay for bypassing DPI.
-
-## Features
-
-- Domain fronting
-- GAS routing
-- Cloudflare Workers
-- DPI bypass
-
-## Installation
-
-\`\`\`bash
-pip install -r requirements.txt
-\`\`\`
-
-## License
-
-MIT`,
-      "requirements.txt": `requests==2.31.0
-google-auth==2.23.0`,
-    },
-  },
-  "codex-plusplus": {
     name: "Codex++",
     description: "Codex++ tweak system for the Codex desktop app",
     language: "TypeScript",
@@ -3356,8 +3244,6 @@ MIT`,
   }
 }`,
     },
-  },
-  "ppt-image-first": {
     name: "PPT Image First",
     description: "PPT image-first skill for Codex/Claude Code/Opencode CLI",
     language: "Python",
@@ -3391,7 +3277,6 @@ MIT`,
       "requirements.txt": `python-pptx==0.6.21
 Pillow==10.0.0`,
     },
-  },
   "GooseRelayVPN": {
     name: "GooseRelayVPN",
     description: "Socks5 VPN that tunnels raw TCP through Google Apps Script to your VPS exit server",
@@ -3471,7 +3356,6 @@ if __name__ == "__main__":
     exploit()`,
     },
   },
-  "club-3090": {
     name: "Club 3090",
     description: "Community recipes for serving LLMs on RTX 3090 with multi-engine support",
     language: "Shell",
@@ -3505,7 +3389,6 @@ MIT`,
       "setup.sh": `#!/bin/bash
 echo "Club 3090 Setup"`,
     },
-  },
   "aattaran-deepclaude": {
     name: "DeepClaude",
     description: "Use Claude Code's autonomous agent loop with DeepSeek V4 Pro, OpenRouter, or any Anthropic-compatible backend",
@@ -3544,7 +3427,6 @@ MIT`,
 };`,
     },
   },
-  "baguette": {
     name: "Baguette",
     description: "Headless iOS Simulator manager/farm with host-side input injection for iOS 26",
     language: "Swift",
@@ -3584,8 +3466,6 @@ class BaguetteManager {
     }
 }`,
     },
-  },
-  "cheat-on-content": {
     name: "Cheat on Content",
     description: "Auto-evolving ops expert that learns YOUR account for content growth",
     language: "Python",
@@ -3619,8 +3499,6 @@ MIT`,
       "requirements.txt": `openai==1.0.0
 click==8.1.0`,
     },
-  },
-  "petdex": {
     name: "Petdex",
     description: "Public gallery of animated Codex pets",
     language: "TypeScript",
@@ -3661,7 +3539,6 @@ MIT`,
   );
 }`,
     },
-  },
   "OpenClaude-Portable": {
     name: "OpenClaude Portable",
     description: "Run Claude Code from a USB drive on any PC — no installation required",
@@ -3747,7 +3624,6 @@ namespace Voidstrap {
 }`,
     },
   },
-  "dirtyfrag": {
     name: "Dirtyfrag",
     description: "Advanced memory manipulation and exploitation framework",
     language: "C",
@@ -3785,8 +3661,6 @@ int main() {
     return 0;
 }`,
     },
-  },
-  "ds4": {
     name: "DS4",
     description: "DeepSeek 4 Flash local inference engine for Metal",
     language: "C",
@@ -3824,8 +3698,6 @@ int main() {
     return 0;
 }`,
     },
-  },
-  "rkn-block-checker": {
     name: "RKN Block Checker",
     description: "Diagnose RKN/TSPU internet blocks layer by layer",
     language: "Python",
@@ -3860,8 +3732,6 @@ MIT`,
       "requirements.txt": `requests==2.31.0
 dnspython==2.4.0`,
     },
-  },
-  "zero-native": {
     name: "Zero Native",
     description: "Build native desktop + mobile apps with web UI and Zig",
     language: "Zig",
@@ -3898,7 +3768,6 @@ pub fn main() !void {
     std.debug.print("Zero Native\\n", .{});
 }`,
     },
-  },
   "Sprite-Pipeline": {
     name: "Sprite Pipeline",
     description: "2D Sprite Sheet Creation Pipeline",
@@ -3969,7 +3838,6 @@ MIT`,
 transformers==4.30.0`,
     },
   },
-  "solidity-cot-auditor": {
     name: "Solidity CoT Auditor",
     description: "Multi-role chain-of-thought LLM pipeline for Solidity security auditing",
     language: "Python",
@@ -4003,8 +3871,6 @@ MIT`,
       "requirements.txt": `openai==1.0.0
 slither-analyzer==0.9.0`,
     },
-  },
-  "chainreason": {
     name: "ChainReason",
     description: "A benchmark for evaluating LLM reasoning on Ethereum and DeFi tasks",
     language: "Python",
@@ -4038,8 +3904,6 @@ MIT`,
       "requirements.txt": `web3==6.0.0
 pandas==2.0.0`,
     },
-  },
-  "univ3-pool-lens": {
     name: "UniV3 Pool Lens",
     description: "TypeScript toolkit for inspecting Uniswap V3 pools",
     language: "TypeScript",
@@ -4074,7 +3938,6 @@ MIT`,
   console.log(\`Inspecting pool: \${poolAddress}\`);
 }`,
     },
-  },
   "EdgeSavedPasswordsDumper": {
     name: "Edge Saved Passwords Dumper",
     description: "Proof of concept showing Edge stores credentials in cleartext",
@@ -4154,7 +4017,6 @@ MIT`,
 }`,
     },
   },
-  "media-downloader": {
     name: "Media Downloader",
     description: "Beautiful native macOS video downloader with trim functionality",
     language: "Swift",
@@ -4193,8 +4055,6 @@ struct ContentView: View {
     }
 }`,
     },
-  },
-  "agent-skills-eval": {
     name: "Agent Skills Eval",
     description: "A test runner for agentskills.io-style AI agent skills",
     language: "TypeScript",
@@ -4230,8 +4090,6 @@ MIT`,
   return { result: 'pass' };
 }`,
     },
-  },
-  "files-sdk": {
     name: "Files SDK",
     description: "A unified storage SDK for object and blob backends - S3, R2, Google, Minio",
     language: "TypeScript",
@@ -4282,8 +4140,6 @@ MIT`,
   }
 }`,
     },
-  },
-  "whatcable": {
     name: "WhatCable",
     description: "macOS menu bar app that tells you what each USB-C cable can do",
     language: "Swift",
@@ -4322,7 +4178,6 @@ struct ContentView: View {
     }
 }`,
     },
-  },
 };
 
 export function getTemplate(
