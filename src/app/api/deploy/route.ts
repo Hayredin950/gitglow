@@ -9,7 +9,7 @@ import { generateCommits, generateCommitDates } from "@/lib/scripts/commit-gener
 // CommitPlan is also re-exported from generators/commits for convenience
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 600; // Increased to 10 minutes for badge automation
+export const maxDuration = 300; // Max allowed for hobby plan (5 minutes)
 
 export async function POST(req: Request) {
   const session = await auth();
