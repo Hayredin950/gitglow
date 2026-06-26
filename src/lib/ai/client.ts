@@ -1,15 +1,16 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
-
-// Using Vercel AI Gateway via Anthropic provider
-// This provides better reliability, caching, and fallback support
-// The AI Gateway automatically handles:
-// - Request routing and optimization
-// - Rate limiting and retries
+// Using Vercel AI Gateway for all model requests
+// The Vercel AI Gateway provides:
+// - Request routing and optimization through edge network
+// - Automatic rate limiting and retries
 // - Model availability and fallbacks
 // - Usage analytics and monitoring
+// - Cost optimization across providers
 
-const anthropic = createAnthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+import { generateText, streamText } from "ai";
 
-export const defaultModel = anthropic("claude-3-5-sonnet");
+// The Vercel AI Gateway recognizes model strings in format: "provider/model-name"
+// Example: "anthropic/claude-3-5-sonnet"
+export const defaultModel = "anthropic/claude-3-5-sonnet";
+
+// Optional: Export direct generation functions if needed
+export { generateText, streamText };

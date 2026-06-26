@@ -1,5 +1,4 @@
-import { defaultModel } from "@/lib/ai/client";
-import { generateText, streamText } from "ai";
+import { defaultModel, generateText, streamText } from "@/lib/ai/client";
 import type { GitHubProfile } from "@/types/github";
 import type { UserIntake } from "@/types/polish";
 

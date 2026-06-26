@@ -1,5 +1,4 @@
-import { defaultModel } from "@/lib/ai/client";
-import { generateText } from "ai";
+import { defaultModel, generateText } from "@/lib/ai/client";
 import type { ProjectSpec, GeneratedProject } from "@/types/polish";
 
 export async function generateProject(
