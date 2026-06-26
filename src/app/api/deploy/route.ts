@@ -23,9 +23,12 @@ export async function POST(req: Request) {
     bio: string;
     project: GeneratedProject;
     commitPlan: CommitPlan[];
+    email?: string;
+    avatar?: string;
+    templateName?: string;
   };
 
-  const { polishId, readme, bio, project, commitPlan } = body;
+  const { polishId, readme, bio, project, commitPlan, email, avatar, templateName } = body;
   const token = dbUser.githubToken!;
   const owner = dbUser.username!;
 
@@ -168,6 +171,9 @@ export async function POST(req: Request) {
             scoreAfter,
             reposCreated: project ? [readmeRepoName, project.name] : [readmeRepoName],
             commitCount: pushed,
+            email: email || undefined,
+            avatar: avatar || undefined,
+            templateName: templateName || undefined,
             completedAt: new Date(),
           },
         });

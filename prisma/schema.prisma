@@ -66,6 +66,9 @@ model Polish {
   scoreBefore     Int?
   scoreAfter      Int?
   userIntake      Json
+  email           String?
+  avatar          String?
+  templateName    String?
   generatedReadme String?      @db.Text
   generatedBio    String?
   reposCreated    String[]

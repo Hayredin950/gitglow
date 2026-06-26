@@ -1,4 +1,4 @@
-import { anthropic } from "@/lib/ai/client";
+import { defaultModel, generateText } from "@/lib/ai/client";
 import type { ProjectSpec, GeneratedProject } from "@/types/polish";
 
 export async function generateProject(
@@ -7,9 +7,8 @@ export async function generateProject(
 ): Promise<GeneratedProject> {
   console.log("[v0] Calling Claude API to generate project:", spec.name);
   
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-5",
-    max_tokens: 8192,
+  const response = await generateText({
+    model: defaultModel,
     system: `You are a senior software engineer who writes clean, production-quality code. Generate complete, working project files. Return ONLY a JSON object with this structure:
 {
   "name": "repo-name",
@@ -21,10 +20,7 @@ export async function generateProject(
   }
 }
 Every file should have real, working content. Include README.md, LICENSE (MIT), .gitignore, and the actual code files.`,
-    messages: [
-      {
-        role: "user",
-        content: `Generate a complete ${spec.type} project:
+    prompt: `Generate a complete ${spec.type} project:
 Name: ${spec.name}
 Description: ${spec.description}
 Language: ${spec.language}
@@ -36,20 +32,11 @@ Add MIT LICENSE with owner name "${ownerName}".
 Add proper .gitignore.
 README must have: badges, description, features list, installation steps, usage, tech stack.
 Return valid JSON only.`,
-      },
-    ],
   });
 
-  console.log("[v0] Claude API response received, status:", response.stop_reason);
+  console.log("[v0] Claude API response received");
   
-  const block = response.content[0];
-  if (block.type !== "text") {
-    console.error("[v0] Unexpected response type:", block.type);
-    throw new Error("No text response from AI");
-  }
-
-  // Extract JSON from the response (handle markdown code fences)
-  const text = block.text.trim();
+  const text = response.text.trim();
   console.log("[v0] Response text length:", text.length, "First 200 chars:", text.slice(0, 200));
   
   const jsonMatch = text.match(/```(?:json)?\s*([\s\S]+?)\s*```/) ?? null;
