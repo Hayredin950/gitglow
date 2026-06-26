@@ -11,7 +11,8 @@ export const dynamic = "force-dynamic";
 
 async function getPolishByShareToken(shareToken: string) {
   try {
-    return await db.polish.findUnique({
+    // First try to find by shareToken
+    let polish = await db.polish.findUnique({
       where: { 
         shareToken,
         status: "COMPLETED",
@@ -19,6 +20,20 @@ async function getPolishByShareToken(shareToken: string) {
       },
       include: { user: true },
     });
+    
+    // If not found by shareToken, try by ID (fallback for backward compatibility)
+    if (!polish) {
+      polish = await db.polish.findUnique({
+        where: { 
+          id: shareToken,
+          status: "COMPLETED",
+          isPublic: true
+        },
+        include: { user: true },
+      });
+    }
+    
+    return polish;
   } catch {
     return null;
   }

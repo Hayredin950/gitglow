@@ -65,15 +65,14 @@ export async function pushFile(
     }
     
     // Add author date if provided (for backdated commits)
+    // Only set author date to past, keep committer date as current time
+    // This ensures GitHub properly handles the commit distribution
     if (authorDate) {
       params.author = {
         ...(params.author || {}),
         date: authorDate,
       };
-      params.committer = {
-        ...(params.committer || {}),
-        date: authorDate,
-      };
+      // Don't set committer date - let GitHub use current time
     }
     
     await octokit.repos.createOrUpdateFileContents(params);
