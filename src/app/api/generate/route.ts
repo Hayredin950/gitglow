@@ -75,29 +75,30 @@ export async function POST(req: Request) {
         emit("status", { message: "Preparing your project repository..." });
         let project: GeneratedProject | null = null;
 
-        if (intake.useTemplate && intake.templateName) {
-          // Use pre-built template
-          console.log("[v0] Loading template:", intake.templateName);
+        // Skip template/AI generation for script-based approach
+        if (!intake.scriptBased && (intake as any).useTemplate && (intake as any).templateName) {
+          // Use pre-built template (legacy AI-based approach)
+          console.log("[v0] Loading template:", (intake as any).templateName);
           try {
-            project = getTemplate(intake.templateName);
+            project = getTemplate((intake as any).templateName);
             if (project) {
               console.log("[v0] Loaded template project:", project.name, "with", Object.keys(project.files).length, "files");
               emit("status", { message: `Using ${project.name} template` });
             } else {
-              throw new Error(`Template not found: ${intake.templateName}`);
+              throw new Error(`Template not found: ${(intake as any).templateName}`);
             }
           } catch (templateErr) {
             const templateMsg = templateErr instanceof Error ? templateErr.message : "Template loading failed";
             console.error("[v0] Template loading error:", templateMsg);
             emit("status", { message: "Template not available, using AI generation instead..." });
-            intake.useTemplate = false;
+            (intake as any).useTemplate = false;
           }
         }
 
         // If not using template or template failed, generate with AI
         if (!project) {
           emit("status", { message: "Generating your project repository..." });
-          const spec = inferProjectFromSkills(intake.skills, intake.projectIdea);
+          const spec = inferProjectFromSkills(intake.skills, (intake as any).projectIdea);
           console.log("[v0] Project spec:", spec);
           try {
             project = await generateProject(spec, intake.fullName);
