@@ -18,7 +18,8 @@ export interface RepoMetadata {
 export function generateRepoMetadata(
   templateName: string,
   intake: UserIntake,
-  index: number
+  index: number,
+  username?: string
 ): RepoMetadata {
   const { skills, goal, fullName } = intake;
   
@@ -43,23 +44,25 @@ export function generateRepoMetadata(
     homepage: intake.website,
     license: "MIT",
     topics,
-    readme: generateTemplateReadme(templateName, intake, index),
+    readme: generateTemplateReadme(templateName, intake, index, username),
   };
 }
 
 export function generateTemplateReadme(
   templateName: string,
   intake: UserIntake,
-  index: number
+  index: number,
+  username?: string
 ): string {
   const { fullName, skills, goal, theme } = intake;
   const skillString = skills.slice(0, 4).join(", ");
+  const repoOwner = username || fullName;
   
   return `# ${templateName.charAt(0).toUpperCase() + templateName.slice(1)} ${index + 1}
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Stars](https://img.shields.io/github/stars/${fullName}/${templateName}-${index + 1}?style=social)](https://github.com/${fullName}/${templateName}-${index + 1}/stargazers)
-[![Forks](https://img.shields.io/github/forks/${fullName}/${templateName}-${index + 1}?style=social)](https://github.com/${fullName}/${templateName}-${index + 1}/network/members)
+[![Stars](https://img.shields.io/github/stars/${repoOwner}/${templateName}-${index + 1}?style=social)](https://github.com/${repoOwner}/${templateName}-${index + 1}/stargazers)
+[![Forks](https://img.shields.io/github/forks/${repoOwner}/${templateName}-${index + 1}?style=social)](https://github.com/${repoOwner}/${templateName}-${index + 1}/network/members)
 
 ## Description
 
@@ -77,7 +80,7 @@ A premium ${templateName} project built with ${skillString}. This project demons
 
 \`\`\`bash
 # Clone the repository
-git clone https://github.com/${fullName}/${templateName}-${index + 1}.git
+git clone https://github.com/${repoOwner}/${templateName}-${index + 1}.git
 
 # Navigate to the project
 cd ${templateName}-${index + 1}
@@ -125,10 +128,10 @@ Built with ❤️ by ${fullName}
 `;
 }
 
-export function generateMITLicense(fullName: string): string {
+export function generateMITLicense(authorName: string): string {
   return `MIT License
 
-Copyright (c) ${new Date().getFullYear()} ${fullName}
+Copyright (c) ${new Date().getFullYear()} ${authorName}
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -149,8 +152,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.`;
 }
 
-export function generateRepoUpdateCommands(metadata: RepoMetadata): string {
+export function generateRepoUpdateCommands(metadata: RepoMetadata, username: string, email: string): string {
+  const licenseContent = generateMITLicense(username);
+  
   return `
+# Configure git user to use YOUR identity (not forked repo owner)
+git config user.name "${username}"
+git config user.email "${email}"
+
 # Update repository metadata
 gh repo edit ${metadata.name} \\
   --description "${metadata.description}" \\
@@ -165,12 +174,12 @@ cat > README.md << 'EOF'
 ${metadata.readme}
 EOF
 
-# Create LICENSE
-cat > LICENSE << 'EOF'
-${generateMITLicense(metadata.name.split('-')[0])}
+# Create LICENSE with YOUR name
+cat > LICENSE << EOF
+${licenseContent}
 EOF
 
-# Commit changes
+# Commit changes with YOUR identity
 git add README.md LICENSE
 git commit -m "docs: add premium README and MIT license"
 git push origin main

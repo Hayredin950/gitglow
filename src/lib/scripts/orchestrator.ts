@@ -11,6 +11,7 @@ import { generateContributionPlan, validateContributionTarget } from "./contribu
 import { validateDreamRepos, generateForkInstructions, calculateForkComplexity } from "./dream-repo-forker";
 import { generateRepoMetadata, generateRepoUpdateCommands, validateRepoMetadata } from "./repo-metadata";
 import { generateCommits, generateCommitDates } from "./commit-generator";
+import { generateBadgeAutomationPlan } from "./badge-automation";
 
 export interface ScriptGenerationResult {
   success: boolean;
@@ -34,6 +35,12 @@ export interface ScriptGenerationResult {
   repoMetadata?: {
     repos: any[];
     commands: string[];
+  };
+  badgeAutomation?: {
+    badges: any[];
+    commands: string[];
+    repoName: string;
+    estimatedTime: string;
   };
   errors: string[];
 }
@@ -96,7 +103,9 @@ export function generateScriptBasedProfile(
         errors.push(`Invalid repo URLs: ${invalid.join(', ')}`);
       }
       
-      const instructions = generateForkInstructions(valid);
+      // Get user email from profile or use default
+      const userEmail = profile.email || `${profile.login}@users.noreply.github.com`;
+      const instructions = generateForkInstructions(valid, profile.login, userEmail);
       const complexity = calculateForkComplexity(valid);
       
       result.dreamRepos = {
@@ -112,15 +121,18 @@ export function generateScriptBasedProfile(
       const repos: any[] = [];
       const commands: string[] = [];
       
+      // Get user email from profile or use default
+      const userEmail = profile.email || `${profile.login}@users.noreply.github.com`;
+      
       intake.selectedTemplates.forEach((template, index) => {
-        const metadata = generateRepoMetadata(template, intake, index);
+        const metadata = generateRepoMetadata(template, intake, index, profile.login);
         const validation = validateRepoMetadata(metadata);
         
         if (!validation.valid) {
           errors.push(`Repo ${index + 1}: ${validation.errors.join(', ')}`);
         } else {
           repos.push(metadata);
-          commands.push(generateRepoUpdateCommands(metadata));
+          commands.push(generateRepoUpdateCommands(metadata, profile.login, userEmail));
         }
       });
       
@@ -129,6 +141,10 @@ export function generateScriptBasedProfile(
         commands,
       };
     }
+
+    // 6. Generate Badge Automation Plan
+    const badgePlan = generateBadgeAutomationPlan(profile.login);
+    result.badgeAutomation = badgePlan;
 
     // Check if we have enough repos
     const totalRepos = (intake.selectedTemplates?.length || 0) + (intake.dreamRepos?.length || 0);
@@ -184,6 +200,14 @@ export function generateExecutionScript(result: ScriptGenerationResult): string 
     });
   }
   
+  // Badge automation
+  if (result.badgeAutomation?.commands) {
+    script.push(`# GitHub Achievement Badge Automation`);
+    script.push(`echo "🏆 Setting up GitHub achievement badge automation..."`);
+    script.push(...result.badgeAutomation.commands);
+    script.push(``);
+  }
+  
   script.push(`echo "✨ Profile transformation complete!"`);
   script.push(`echo "🎉 Your GitHub profile is now premium styled!"`);
   
@@ -223,6 +247,15 @@ export function generateSummary(result: ScriptGenerationResult): string {
     summary.push(`## Template Repos`);
     summary.push(`- Repos to Create: ${result.repoMetadata.repos.length}`);
     summary.push(`- All include MIT License and Premium README`);
+    summary.push(`- All commits will use your GitHub identity`);
+    summary.push(``);
+  }
+  
+  if (result.badgeAutomation) {
+    summary.push(`## GitHub Achievement Badges`);
+    summary.push(`- Badges to Earn: ${result.badgeAutomation.badges.map(b => b.name).join(', ')}`);
+    summary.push(`- Estimated Time: ${result.badgeAutomation.estimatedTime}`);
+    summary.push(`- Includes YOLO, Pull Shark, and Quickdraw badges`);
     summary.push(``);
   }
   

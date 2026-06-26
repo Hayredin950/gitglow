@@ -98,4 +98,5 @@ export interface CommitPlan {
   path: string;
   content: string;
   message: string;
+  author?: { name: string; email: string };
 }

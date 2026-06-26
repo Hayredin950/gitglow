@@ -1,6 +1,6 @@
 /**
  * Script-based Contribution Generator
- * Generates 400+ GitHub contributions without AI integration
+ * Generates 150+ GitHub contributions without AI integration
  */
 
 import { generateCommits, generateCommitDates } from './commit-generator';
@@ -14,7 +14,7 @@ export interface ContributionPlan {
 
 export function generateContributionPlan(
   templates: string[],
-  targetContributions: number = 400
+  targetContributions: number = 150
 ): ContributionPlan[] {
   const plans: ContributionPlan[] = [];
   const commitsPerTemplate = Math.ceil(targetContributions / templates.length);

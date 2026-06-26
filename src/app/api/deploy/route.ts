@@ -110,7 +110,7 @@ export async function POST(req: Request) {
             await createRepo(token, readmeRepoName, "My GitHub profile README", false);
             await new Promise((r) => setTimeout(r, 1500));
           }
-          await pushFile(token, owner, readmeRepoName, "README.md", readme, "feat: add profile README ✨", "main", committer);
+          await pushFile(token, owner, readmeRepoName, "README.md", readme, "feat: add profile README ✨", "main", committer, undefined);
           // Enable branch protection on profile repo to fix the warning
           await enableBranchProtection(token, owner, readmeRepoName, "main");
           emit("readme", "✅ Profile README created successfully!", 2, total);
@@ -154,7 +154,7 @@ export async function POST(req: Request) {
                   currentStep,
                   total
                 );
-                await pushFile(token, owner, repoName, path, content ?? "", `chore: add ${path}`, "main", committer);
+                await pushFile(token, owner, repoName, path, content ?? "", `chore: add ${path}`, "main", committer, undefined);
                 await new Promise((r) => setTimeout(r, 300));
               }
 
@@ -208,7 +208,7 @@ export async function POST(req: Request) {
                 currentStep,
                 total
               );
-              await pushFile(token, owner, project.name, path, content ?? "", `chore: add ${path}`, "main", committer);
+              await pushFile(token, owner, project.name, path, content ?? "", `chore: add ${path}`, "main", committer, undefined);
               await new Promise((r) => setTimeout(r, 300));
             }
 
@@ -271,7 +271,7 @@ export async function POST(req: Request) {
           emit("commits", `Generating contribution commits for ${selectedTemplates.length} repos...`, 4, total);
           commitPlanToUse = [];
           
-          const commitsPerRepo = Math.ceil(400 / selectedTemplates.length); // Aim for 400+ total commits
+          const commitsPerRepo = Math.ceil(150 / selectedTemplates.length); // Aim for 150+ total commits
           
           for (let i = 0; i < selectedTemplates.length; i++) {
             const templateId = selectedTemplates[i];
@@ -286,6 +286,7 @@ export async function POST(req: Request) {
                 path: `.gitkeep-${j}`,
                 content: `# Commit ${j + 1}\n\nGenerated contribution commit for ${templateId}.`,
                 message: commit.message,
+                author: committer, // Ensure proper authorship
               });
             });
           }
@@ -294,7 +295,7 @@ export async function POST(req: Request) {
         emit("commits", `Pushing ${commitPlanToUse.length} contribution commits...`, 4, total);
         let pushed = 0;
         let failed = 0;
-        const maxCommitsToPush = scriptBased ? 400 : 100; // Allow up to 400 commits for script-based
+        const maxCommitsToPush = scriptBased ? 150 : 100; // Allow up to 150 commits for script-based (reduced from 400)
         for (const commit of commitPlanToUse.slice(0, maxCommitsToPush)) {
           try {
             await pushFile(
@@ -305,11 +306,12 @@ export async function POST(req: Request) {
               commit.content,
               commit.message,
               "main",
-              committer
+              commit.author || committer, // Use commit-specific author if available
+              commit.date // Pass the date for proper commit distribution
             );
             pushed++;
             if (pushed % 10 === 0) {
-              emit("commits", `${pushed}/${Math.min(100, commitPlanToUse.length)} commits pushed...`, 4, total);
+              emit("commits", `${pushed}/${Math.min(maxCommitsToPush, commitPlanToUse.length)} commits pushed...`, 4, total);
             }
             await new Promise((r) => setTimeout(r, 200));
           } catch (commitErr) {
@@ -333,7 +335,7 @@ export async function POST(req: Request) {
             await new Promise((r) => setTimeout(r, 1500));
 
             // Initialize repo with README
-            await pushFile(token, owner, tempRepoName, "README.md", "# Badge Helper\n\nThis repo helps earn GitHub achievement badges.\n\n## Badges Being Earned\n- **YOLO**: Merged PRs without review\n- **Pull Shark**: Created 5+ PRs\n- **Quickdraw**: Merged PRs quickly after creation", "feat: initialize badge helper", "main", committer);
+            await pushFile(token, owner, tempRepoName, "README.md", "# Badge Helper\n\nThis repo helps earn GitHub achievement badges.\n\n## Badges Being Earned\n- **YOLO**: Merged PRs without review\n- **Pull Shark**: Created 5+ PRs\n- **Quickdraw**: Merged PRs quickly after creation", "feat: initialize badge helper", "main", committer, undefined);
             await new Promise((r) => setTimeout(r, 1000));
 
             // Create 7 PRs and merge them immediately for badges (increased from 5 to ensure badge triggers)
@@ -346,7 +348,7 @@ export async function POST(req: Request) {
               emit("badges", `Created branch ${branchName} (${i}/7)...`, 5, total);
               
               // Add file to branch
-              await pushFile(token, owner, tempRepoName, `PR_${i}.md`, badgeContent, `feat: badge automation PR #${i}`, branchName, committer);
+              await pushFile(token, owner, tempRepoName, `PR_${i}.md`, badgeContent, `feat: badge automation PR #${i}`, branchName, committer, undefined);
               await new Promise((r) => setTimeout(r, 500));
               
               // Create PR

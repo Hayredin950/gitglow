@@ -39,7 +39,8 @@ export function validateDreamRepos(urls: string[]): { valid: DreamRepo[]; invali
   return { valid, invalid };
 }
 
-export function generateForkInstructions(repos: DreamRepo[]): string {
+export function generateForkInstructions(repos: DreamRepo[], username: string, email: string): string {
+  const currentYear = new Date().getFullYear();
   const instructions = repos.map((repo, index) => {
     return `
 ## Fork ${index + 1}: ${repo.owner}/${repo.repo}
@@ -50,6 +51,10 @@ gh repo fork ${repo.owner}/${repo.repo} --clone
 
 # Navigate to the forked repo
 cd ${repo.repo}
+
+# Configure git user to use YOUR identity (not the original repo owner)
+git config user.name "${username}"
+git config user.email "${email}"
 
 # Add premium README
 cat > README.md << 'EOF'
@@ -91,10 +96,10 @@ EOF
 
 # Add MIT License if not present
 if [ ! -f LICENSE ]; then
-  cat > LICENSE << 'EOF'
+  cat > LICENSE << EOF
 MIT License
 
-Copyright (c) 2024
+Copyright (c) ${currentYear} ${username}
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -116,7 +121,7 @@ SOFTWARE.
 EOF
 fi
 
-# Commit changes
+# Commit changes with YOUR identity
 git add README.md LICENSE
 git commit -m "docs: add premium README and MIT license"
 
@@ -304,15 +309,25 @@ This is an enhanced fork of ${owner}/${repo}.
     sha: commitData.sha,
   });
 
-  // Create PR
-  await octokit.pulls.create({
-    owner,
-    repo,
-    title: "Enhance repo for portfolio",
-    head: branchName,
-    base: defaultBranch,
-    body: "This PR adds a LICENSE and updates the README to make it portfolio-ready.",
-  });
+  // Create PR (only if we have committer info to ensure proper authorship)
+  if (committer) {
+    await octokit.pulls.create({
+      owner,
+      repo,
+      title: "Enhance repo for portfolio",
+      head: branchName,
+      base: defaultBranch,
+      body: "This PR adds a LICENSE and updates the README to make it portfolio-ready.",
+    });
+  } else {
+    // If no committer info, just merge the branch directly
+    await octokit.git.updateRef({
+      owner,
+      repo,
+      ref: `heads/${defaultBranch}`,
+      sha: commitData.sha,
+    });
+  }
 
   return branchName;
 }

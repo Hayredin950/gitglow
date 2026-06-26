@@ -24,7 +24,8 @@ export async function pushFile(
   content: string,
   message: string,
   branch = "main",
-  committer?: { name: string; email: string }
+  committer?: { name: string; email: string },
+  authorDate?: string
 ) {
   const octokit = createOctokit(token);
 
@@ -48,7 +49,7 @@ export async function pushFile(
   const encoded = Buffer.from(content, "utf-8").toString("base64");
 
   try {
-    await octokit.repos.createOrUpdateFileContents({
+    const params: any = {
       owner,
       repo,
       path,
@@ -56,9 +57,27 @@ export async function pushFile(
       content: encoded,
       sha,
       branch,
-      ...(committer ? { committer, author: committer } : {}),
-    });
-    console.log(`[v0] Successfully pushed ${path} to ${owner}/${repo}`);
+    };
+    
+    if (committer) {
+      params.committer = committer;
+      params.author = committer;
+    }
+    
+    // Add author date if provided (for backdated commits)
+    if (authorDate) {
+      params.author = {
+        ...(params.author || {}),
+        date: authorDate,
+      };
+      params.committer = {
+        ...(params.committer || {}),
+        date: authorDate,
+      };
+    }
+    
+    await octokit.repos.createOrUpdateFileContents(params);
+    console.log(`[v0] Successfully pushed ${path} to ${owner}/${repo}${authorDate ? ` (date: ${authorDate})` : ''}`);
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : "Unknown error";
     if (errMsg.includes("422") || errMsg.includes("Unprocessable Entity")) {

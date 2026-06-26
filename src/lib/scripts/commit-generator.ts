@@ -173,7 +173,7 @@ export function generateCommits(templateName: string, count: number = 20): Commi
   return commits;
 }
 
-export function generateCommitPlan(templateName: string, count: number = 20): Array<{ repo: string; date: string; path: string; content: string; message: string }> {
+export function generateCommitPlan(templateName: string, count: number = 20, username?: string, email?: string): Array<{ repo: string; date: string; path: string; content: string; message: string; author?: { name: string; email: string } }> {
   const commits = generateCommits(templateName, count);
   const dates = generateCommitDates(new Date(), count);
   const repoName = `${templateName}-1`;
@@ -184,64 +184,91 @@ export function generateCommitPlan(templateName: string, count: number = 20): Ar
     path: `.gitkeep-${index}`,
     content: `# Commit ${index + 1}\n\nGenerated contribution commit for ${templateName}.`,
     message: commit.message,
+    author: username && email ? { name: username, email } : undefined,
   }));
 }
 
 export function generateCommitDates(baseDate: Date, count: number): Date[] {
   const dates: Date[] = [];
   const now = baseDate;
-  const usedDateKeys = new Set<string>();
+  const usedDateKeys = new Map<string, number>(); // Track date -> commit count
 
-  for (let i = 0; i < count; i++) {
-    let date: Date | null = null;
-    let attempts = 0;
+  // Calculate distribution across 3 years (36 months)
+  const monthsPerYear = 12;
+  const totalMonths = 36;
+  const commitsPerMonth = Math.ceil(count / totalMonths);
 
-    while (!date && attempts < 200) {
-      // Generate dates spread across the past 2-3 years (730-1095 days)
-      const minDays = 730; // 2 years minimum
-      const maxDays = 1095; // 3 years maximum
-      const daysAgo = minDays + Math.floor(Math.random() * (maxDays - minDays));
-      const candidateDate = new Date(now);
-      candidateDate.setDate(candidateDate.getDate() - daysAgo);
+  for (let yearOffset = 0; yearOffset < 3; yearOffset++) {
+    for (let monthOffset = 0; monthOffset < 12; monthOffset++) {
+      const targetMonthCommits = Math.min(commitsPerMonth, count - dates.length);
+      
+      if (targetMonthCommits <= 0) break;
 
-      // Avoid weekends most of the time to look realistic (only ~20% chance for weekend commits)
-      const dayOfWeek = candidateDate.getDay();
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
-        if (Math.random() > 0.2) {
-          attempts++;
-          continue;
-        }
+      // Calculate the target month
+      const targetDate = new Date(now);
+      targetDate.setFullYear(targetDate.getFullYear() - yearOffset);
+      targetDate.setMonth(targetDate.getMonth() - monthOffset);
+      
+      // Get days in this month
+      const daysInMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
+      
+      // Distribute commits across different days in the month
+      const daysToUse = Math.min(targetMonthCommits, Math.floor(daysInMonth * 0.6)); // Use ~60% of days
+      const selectedDays = new Set<number>();
+      
+      while (selectedDays.size < daysToUse) {
+        const randomDay = Math.floor(Math.random() * daysInMonth) + 1;
+        selectedDays.add(randomDay);
       }
-
-      const dateKey = candidateDate.toISOString().split('T')[0];
-      if (usedDateKeys.has(dateKey)) {
-        // Allow multiple commits on the same day occasionally (but not too many)
-        const commitsOnDay = dates.filter(d => d.toISOString().split('T')[0] === dateKey).length;
-        if (commitsOnDay >= 3) {
-          attempts++;
-          continue;
+      
+      // Generate commits for selected days
+      selectedDays.forEach(day => {
+        if (dates.length >= count) return;
+        
+        const candidateDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), day);
+        
+        // Skip weekends (most of the time)
+        const dayOfWeek = candidateDate.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+          if (Math.random() > 0.15) { // 15% chance for weekend commits
+            return;
+          }
         }
-      }
-
-      // Random time during work hours (7 AM to 7 PM) to look realistic
-      const hours = Math.floor(Math.random() * 12) + 7;
-      const minutes = Math.floor(Math.random() * 60);
-      const seconds = Math.floor(Math.random() * 60);
-      candidateDate.setHours(hours, minutes, seconds);
-
-      date = candidateDate;
-      attempts++;
+        
+        // Check if we already have commits on this day
+        const dateKey = candidateDate.toISOString().split('T')[0];
+        const existingCommits = usedDateKeys.get(dateKey) || 0;
+        
+        if (existingCommits >= 2) { // Max 2 commits per day
+          return;
+        }
+        
+        // Random time during work hours (8 AM - 6 PM) to look realistic
+        const hours = Math.floor(Math.random() * 10) + 8;
+        const minutes = Math.floor(Math.random() * 60);
+        const seconds = Math.floor(Math.random() * 60);
+        candidateDate.setHours(hours, minutes, seconds);
+        
+        dates.push(candidateDate);
+        usedDateKeys.set(dateKey, existingCommits + 1);
+      });
     }
+    
+    if (dates.length >= count) break;
+  }
 
-    if (date) {
-      dates.push(date);
-    } else {
-      // Fallback to a random date if we can't find a good one
-      const fallbackDate = new Date(now);
-      fallbackDate.setDate(fallbackDate.getDate() - Math.floor(Math.random() * 1095));
-      fallbackDate.setHours(9 + Math.floor(Math.random() * 8), Math.floor(Math.random() * 60), Math.floor(Math.random() * 60));
-      dates.push(fallbackDate);
-    }
+  // If we still need more commits, fill them randomly
+  while (dates.length < count) {
+    const daysAgo = Math.floor(Math.random() * 1095); // Up to 3 years
+    const candidateDate = new Date(now);
+    candidateDate.setDate(candidateDate.getDate() - daysAgo);
+    
+    const hours = Math.floor(Math.random() * 10) + 8;
+    const minutes = Math.floor(Math.random() * 60);
+    const seconds = Math.floor(Math.random() * 60);
+    candidateDate.setHours(hours, minutes, seconds);
+    
+    dates.push(candidateDate);
   }
 
   // Sort the dates in chronological order
