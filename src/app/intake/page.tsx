@@ -218,19 +218,19 @@ export default function IntakePage() {
       className="space-y-6"
     >
       <div>
-        <h2 className="text-2xl font-bold mb-2">What are your top skills?</h2>
+        <h2 className="text-2xl font-bold mb-2">What languages &amp; frameworks do you use?</h2>
         <p className="text-zinc-400 text-sm">
-          Select at least 3 skills you&apos;re strong in.
+          Select all that apply. These will appear as skill icons.
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
+      <div className="flex flex-wrap gap-2">
         {SKILLS_OPTIONS.map((skill) => (
           <button
             key={skill}
             onClick={() => toggleSkill(skill)}
-            className={`rounded-lg border px-3 py-2 text-sm transition-colors text-left ${
+            className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
               intake.skills?.includes(skill)
-                ? "border-blue-500 bg-blue-600/20 text-blue-200"
+                ? "border-blue-500 bg-blue-600/20 text-blue-300"
                 : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-300"
             }`}
           >
