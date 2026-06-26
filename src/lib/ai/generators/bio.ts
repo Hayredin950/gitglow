@@ -17,7 +17,9 @@ export async function generateBio(intake: UserIntake): Promise<string> {
       return response.text.trim().slice(0, 160);
     } catch (err) {
       console.error("[v0] Bio gateway error:", err);
-      return `${fullName} • ${skills.slice(0, 2).join(" • ")} • ${goal}`;
+      const goalText = goal === "job" ? "Open to opportunities" : goal === "opensource" ? "Open source contributor" : goal === "portfolio" ? "Building cool things" : "Always learning";
+      const loc = location ? ` 📍 ${location}` : "";
+      return `${skills.slice(0, 3).join(" • ")} developer${loc} | ${goalText}`.slice(0, 160);
     }
   }
 }

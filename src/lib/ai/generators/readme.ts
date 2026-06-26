@@ -2,6 +2,72 @@ import { defaultModel, gatewayModel, generateText, streamText } from "@/lib/ai/c
 import type { GitHubProfile } from "@/types/github";
 import type { UserIntake } from "@/types/polish";
 
+function buildStaticReadme(profile: GitHubProfile, intake: UserIntake): string {
+  const { fullName, skills, goal, tone, location, website } = intake;
+  const username = profile.login;
+  const skillIcons = skills.slice(0, 8).map(s => s.toLowerCase().replace(/[^a-z0-9]/g, "")).join(",");
+  const goalLine = goal === "job"
+    ? "🚀 Open to new opportunities"
+    : goal === "opensource"
+    ? "🌍 Contributing to open source"
+    : goal === "portfolio"
+    ? "💼 Showcasing my work"
+    : "📚 Always learning";
+  const toneEmoji = tone === "hacker" ? "⚡" : tone === "casual" ? "👋" : "👨‍💻";
+
+  return `<div align="center">
+
+![Header](https://capsule-render.vercel.app/api?type=waving&color=gradient&height=200&section=header&text=${encodeURIComponent(fullName)}&fontSize=50&fontAlignY=35&animation=twinkling)
+
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&duration=3000&pause=1000&color=3B82F6&center=true&vCenter=true&width=600&lines=${encodeURIComponent(goalLine)};${encodeURIComponent("Skills: " + skills.slice(0, 3).join(" • "))};${encodeURIComponent("Let's build something great!")})](https://git.io/typing-svg)
+
+</div>
+
+## ${toneEmoji} About Me
+
+\`\`\`json
+{
+  "name": "${fullName}",
+  "username": "${username}",
+  "skills": ${JSON.stringify(skills.slice(0, 6))},
+  "goal": "${goalLine}"${location ? `,\n  "location": "${location}"` : ""}${website ? `,\n  "website": "${website}"` : ""}
+}
+\`\`\`
+
+## 🛠️ Tech Stack
+
+[![Skills](https://skillicons.dev/icons?i=${skillIcons}&theme=dark)](https://skillicons.dev)
+
+## 📊 GitHub Stats
+
+<div align="center">
+
+![Stats](https://github-readme-stats.vercel.app/api?username=${username}&theme=tokyonight&show_icons=true&hide_border=true&count_private=true)
+![Streak](https://streak-stats.demolab.com?user=${username}&theme=tokyonight&hide_border=true)
+![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&theme=tokyonight&layout=compact&hide_border=true)
+
+</div>
+
+## 📈 Activity
+
+![Activity Graph](https://github-readme-activity-graph.vercel.app/graph?username=${username}&theme=tokyo-night&hide_border=true)
+
+## 🏆 Trophies
+
+![Trophies](https://github-profile-trophy.vercel.app/?username=${username}&theme=dracula&column=4&margin-w=8)
+
+---
+
+<div align="center">
+
+[![Polished by GitGlow](https://img.shields.io/badge/Polished%20by-GitGlow%20✨-3B82F6?style=flat-square)](https://gitglow-pi.vercel.app)
+
+</div>
+
+![Footer](https://capsule-render.vercel.app/api?type=waving&color=gradient&height=100&section=footer)
+`;
+}
+
 export async function generateProfileReadme(
   profile: GitHubProfile,
   intake: UserIntake
@@ -77,7 +143,7 @@ export async function* streamProfileReadme(
   const README_SYSTEM = `You are an expert GitHub profile designer. Generate stunning profile READMEs that get developers hired. Output ONLY raw markdown, no explanations.`;
   const README_PROMPT = `Generate a beautiful GitHub profile README for ${fullName} (username: ${username}). Skills: ${skillsStr}. Goal: ${goal}. Tone: ${tone}. Include: wave header (capsule-render), typing SVG, about-me JSON block, skill icons (skillicons.dev), GitHub stats, streak, top languages, activity graph, trophies, GitGlow badge at bottom, wave footer. Use tokyonight theme throughout. Output raw markdown only.`;
 
-  // Try primary model first; fall back to gateway if it fails
+  // Try primary model first; fall back to gateway, then static template
   let streamResult;
   try {
     streamResult = await streamText({ model: defaultModel, system: README_SYSTEM, prompt: README_PROMPT });
@@ -86,8 +152,9 @@ export async function* streamProfileReadme(
     try {
       streamResult = await streamText({ model: gatewayModel, system: README_SYSTEM, prompt: README_PROMPT });
     } catch (gatewayErr) {
-      console.error("[v0] README gateway error:", gatewayErr);
-      throw new Error("Failed to stream README (both primary and gateway failed)");
+      console.error("[v0] README gateway error, using static template:", gatewayErr);
+      yield buildStaticReadme(profile, intake);
+      return;
     }
   }
 
@@ -98,6 +165,6 @@ export async function* streamProfileReadme(
   }
 
   if (!contentGenerated) {
-    throw new Error("README generation failed: no content produced");
+    yield buildStaticReadme(profile, intake);
   }
 }

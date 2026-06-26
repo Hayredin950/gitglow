@@ -6,7 +6,7 @@ import { generateBio } from "@/lib/ai/generators/bio";
 import { generateProject, inferProjectFromSkills } from "@/lib/ai/generators/project";
 import { generateCommitSchedule } from "@/lib/ai/generators/commits";
 import { db } from "@/lib/db";
-import { getTemplate } from "@/lib/templates/loader";
+import { getTemplate, listTemplates } from "@/lib/templates/loader";
 import type { UserIntake, GeneratedProject, CommitPlan } from "@/types/polish";
 
 export const dynamic = 'force-dynamic';
@@ -57,12 +57,17 @@ export async function POST(req: Request) {
         const bio = await generateBio(intake);
         emit("bio_complete", { bio });
 
-        // Phase 3: Stream README
+        // Phase 3: Stream README (static template fallback built into the generator)
         emit("status", { message: "Generating your profile README..." });
         let readme = "";
-        for await (const chunk of streamProfileReadme(profile, intake)) {
-          readme += chunk;
-          emit("readme_chunk", { chunk });
+        try {
+          for await (const chunk of streamProfileReadme(profile, intake)) {
+            readme += chunk;
+            emit("readme_chunk", { chunk });
+          }
+        } catch (readmeErr) {
+          console.error("[v0] README stream error:", readmeErr);
+          emit("status", { message: "Using profile README template..." });
         }
         emit("readme_complete", { readme });
 
@@ -84,7 +89,7 @@ export async function POST(req: Request) {
           } catch (templateErr) {
             const templateMsg = templateErr instanceof Error ? templateErr.message : "Template loading failed";
             console.error("[v0] Template loading error:", templateMsg);
-            emit("status", { message: "Template not available, using AI generation instead" });
+            emit("status", { message: "Template not available, using AI generation instead..." });
             intake.useTemplate = false;
           }
         }
@@ -99,21 +104,21 @@ export async function POST(req: Request) {
             console.log("[v0] Generated project:", project?.name, "with", Object.keys(project?.files ?? {}).length, "files");
           } catch (projErr) {
             const projMsg = projErr instanceof Error ? projErr.message : "Project generation failed";
-            console.error("[v0] Project generation error:", projMsg);
-            
-            // Create a fallback project with basic structure
-            console.log("[v0] Creating fallback project...");
-            project = {
-              name: spec.name,
-              description: spec.description,
-              topics: ["portfolio", "starter"],
-              files: {
-                "README.md": `# ${spec.name}\n\n${spec.description}\n\n## Getting Started\n\n\`\`\`\nbash\nnpm install\nnpm run dev\n\`\`\`\n\n## Tech Stack\n\n- ${spec.language}\n${spec.framework ? `- ${spec.framework}` : ''}\n`,
-                ".gitignore": `node_modules/\n.env\n.DS_Store\ndist/\nbuild/\n`,
-                "LICENSE": `MIT License\n\nCopyright (c) 2024 ${intake.fullName}\n\nPermission is hereby granted, free of charge...`,
-              }
-            };
-            emit("status", { message: `Using basic project template` });
+            console.error("[v0] Project generation error, picking best template:", projMsg);
+
+            // Pick the best template based on skills
+            const skillLower = intake.skills.map(s => s.toLowerCase());
+            const templates = listTemplates();
+            let bestTemplateId = templates[0]!.id;
+            if (skillLower.some(s => ["python", "django", "flask", "fastapi"].includes(s))) {
+              bestTemplateId = skillLower.some(s => ["nlp", "ml", "ai"].includes(s)) ? "nlp-toolkit" : "python-utility";
+            } else if (skillLower.some(s => ["node", "express", "javascript", "typescript"].includes(s))) {
+              bestTemplateId = "node-rest-api";
+            } else if (skillLower.some(s => ["react", "next", "vue", "angular"].includes(s))) {
+              bestTemplateId = "portfolio";
+            }
+            project = getTemplate(bestTemplateId);
+            emit("status", { message: `Using ${project?.name ?? "project"} template` });
           }
         }
 
