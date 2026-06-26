@@ -4,7 +4,8 @@ import type { UserIntake } from "@/types/polish";
 const BIO_SYSTEM = `You are an expert at writing premium, recruiter-optimized GitHub bios that impress hiring managers at top tech companies. Max 160 characters. No quotes. Use emojis strategically. Focus on: specific tech stack, current impact, and career trajectory. Make it memorable and professional.`;
 
 export async function generateBio(intake: UserIntake): Promise<string> {
-  const { fullName, skills, goal, tone, location } = intake;
+  const { fullName, skills, goal, location } = intake;
+  const tone = (intake as any).tone || "professional";
   
   const goalMapping: Record<string, string> = {
     job: "Actively seeking software engineering roles",
