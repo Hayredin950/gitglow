@@ -1,4 +1,4 @@
-import { defaultModel, generateText, streamText } from "@/lib/ai/client";
+import { defaultModel, gatewayModel, generateText, streamText } from "@/lib/ai/client";
 import type { GitHubProfile } from "@/types/github";
 import type { UserIntake } from "@/types/polish";
 
@@ -74,24 +74,30 @@ export async function* streamProfileReadme(
     throw new Error("Invalid profile data: missing username or fullName");
   }
 
+  const README_SYSTEM = `You are an expert GitHub profile designer. Generate stunning profile READMEs that get developers hired. Output ONLY raw markdown, no explanations.`;
+  const README_PROMPT = `Generate a beautiful GitHub profile README for ${fullName} (username: ${username}). Skills: ${skillsStr}. Goal: ${goal}. Tone: ${tone}. Include: wave header (capsule-render), typing SVG, about-me JSON block, skill icons (skillicons.dev), GitHub stats, streak, top languages, activity graph, trophies, GitGlow badge at bottom, wave footer. Use tokyonight theme throughout. Output raw markdown only.`;
+
+  // Try primary model first; fall back to gateway if it fails
+  let streamResult;
   try {
-    const stream = await streamText({
-      model: defaultModel,
-      system: `You are an expert GitHub profile designer. Generate stunning profile READMEs that get developers hired. Output ONLY raw markdown, no explanations.`,
-      prompt: `Generate a beautiful GitHub profile README for ${fullName} (username: ${username}). Skills: ${skillsStr}. Goal: ${goal}. Tone: ${tone}. Include: wave header (capsule-render), typing SVG, about-me JSON block, skill icons (skillicons.dev), GitHub stats, streak, top languages, activity graph, trophies, GitGlow badge at bottom, wave footer. Use tokyonight theme throughout. Output raw markdown only.`,
-    });
-
-    let contentGenerated = false;
-    for await (const chunk of stream.textStream) {
-      contentGenerated = true;
-      yield chunk;
+    streamResult = await streamText({ model: defaultModel, system: README_SYSTEM, prompt: README_PROMPT });
+  } catch (primaryErr) {
+    console.error("[v0] README primary error, trying gateway:", primaryErr);
+    try {
+      streamResult = await streamText({ model: gatewayModel, system: README_SYSTEM, prompt: README_PROMPT });
+    } catch (gatewayErr) {
+      console.error("[v0] README gateway error:", gatewayErr);
+      throw new Error("Failed to stream README (both primary and gateway failed)");
     }
+  }
 
-    if (!contentGenerated) {
-      throw new Error("README generation failed: no content produced");
-    }
-  } catch (err) {
-    console.error("[v0] Stream README generation error:", err);
-    throw new Error("Failed to stream README");
+  let contentGenerated = false;
+  for await (const chunk of streamResult.textStream) {
+    contentGenerated = true;
+    yield chunk;
+  }
+
+  if (!contentGenerated) {
+    throw new Error("README generation failed: no content produced");
   }
 }

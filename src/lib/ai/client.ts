@@ -1,16 +1,12 @@
-// Using Vercel AI Gateway for all model requests
-// The Vercel AI Gateway provides:
-// - Request routing and optimization through edge network
-// - Automatic rate limiting and retries
-// - Model availability and fallbacks
-// - Usage analytics and monitoring
-// - Cost optimization across providers
-
 import { generateText, streamText } from "ai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { gateway } from "@ai-sdk/gateway";
 
-// The Vercel AI Gateway recognizes model strings in format: "provider/model-name"
-// Example: "anthropic/claude-3-5-sonnet"
-export const defaultModel = "anthropic/claude-3-5-sonnet";
+// Primary provider: Anthropic direct (reads ANTHROPIC_API_KEY + ANTHROPIC_BASE_URL from env)
+const anthropic = createAnthropic();
+export const defaultModel = anthropic("claude-3-5-sonnet-20241022");
 
-// Optional: Export direct generation functions if needed
+// Fallback via Vercel AI Gateway (reads AI_GATEWAY_API_KEY from env)
+export const gatewayModel = gateway("anthropic/claude-3-5-sonnet");
+
 export { generateText, streamText };

@@ -1,20 +1,23 @@
-import { defaultModel, generateText } from "@/lib/ai/client";
+import { defaultModel, gatewayModel, generateText } from "@/lib/ai/client";
 import type { UserIntake } from "@/types/polish";
+
+const BIO_SYSTEM = `You are an expert at writing punchy, recruiter-optimized GitHub bios. Max 160 characters. No quotes. Include emojis sparingly. Focus on what they build and their goal.`;
 
 export async function generateBio(intake: UserIntake): Promise<string> {
   const { fullName, skills, goal, tone, location } = intake;
+  const prompt = `Write a GitHub bio for ${fullName}. Skills: ${skills.slice(0, 4).join(", ")}. Goal: ${goal}. Tone: ${tone}. Location: ${location ?? "not specified"}. Max 160 chars. Output only the bio text.`;
 
   try {
-    const response = await generateText({
-      model: defaultModel,
-      system: `You are an expert at writing punchy, recruiter-optimized GitHub bios. Max 160 characters. No quotes. Include emojis sparingly. Focus on what they build and their goal.`,
-      prompt: `Write a GitHub bio for ${fullName}. Skills: ${skills.slice(0, 4).join(", ")}. Goal: ${goal}. Tone: ${tone}. Location: ${location ?? "not specified"}. Max 160 chars. Output only the bio text.`,
-    });
-
+    const response = await generateText({ model: defaultModel, system: BIO_SYSTEM, prompt });
     return response.text.trim().slice(0, 160);
-  } catch (err) {
-    console.error("[v0] Bio generation error:", err);
-    // Fallback bio
-    return `${fullName} • ${skills.slice(0, 2).join(" • ")} • ${goal}`;
+  } catch (primaryErr) {
+    console.error("[v0] Bio primary error, trying gateway:", primaryErr);
+    try {
+      const response = await generateText({ model: gatewayModel, system: BIO_SYSTEM, prompt });
+      return response.text.trim().slice(0, 160);
+    } catch (err) {
+      console.error("[v0] Bio gateway error:", err);
+      return `${fullName} • ${skills.slice(0, 2).join(" • ")} • ${goal}`;
+    }
   }
 }

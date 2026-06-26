@@ -1,4 +1,4 @@
-import { defaultModel, generateText } from "@/lib/ai/client";
+import { defaultModel, gatewayModel, generateText } from "@/lib/ai/client";
 import type { ProjectSpec, GeneratedProject } from "@/types/polish";
 
 export async function generateProject(
@@ -6,10 +6,8 @@ export async function generateProject(
   ownerName: string
 ): Promise<GeneratedProject> {
   console.log("[v0] Calling Claude API to generate project:", spec.name);
-  
-  const response = await generateText({
-    model: defaultModel,
-    system: `You are a senior software engineer who writes clean, production-quality code. Generate complete, working project files. Return ONLY a JSON object with this structure:
+
+  const PROJECT_SYSTEM = `You are a senior software engineer who writes clean, production-quality code. Generate complete, working project files. Return ONLY a JSON object with this structure:
 {
   "name": "repo-name",
   "description": "one-line description",
@@ -19,8 +17,9 @@ export async function generateProject(
     ...
   }
 }
-Every file should have real, working content. Include README.md, LICENSE (MIT), .gitignore, and the actual code files.`,
-    prompt: `Generate a complete ${spec.type} project:
+Every file should have real, working content. Include README.md, LICENSE (MIT), .gitignore, and the actual code files.`;
+
+  const PROJECT_PROMPT = `Generate a complete ${spec.type} project:
 Name: ${spec.name}
 Description: ${spec.description}
 Language: ${spec.language}
@@ -31,9 +30,21 @@ Include 5-10 files with real working code. The project must be impressive for a 
 Add MIT LICENSE with owner name "${ownerName}".
 Add proper .gitignore.
 README must have: badges, description, features list, installation steps, usage, tech stack.
-Return valid JSON only.`,
-  });
+Return valid JSON only.`;
 
+  let responseText: string;
+  try {
+    const response = await generateText({ model: defaultModel, system: PROJECT_SYSTEM, prompt: PROJECT_PROMPT });
+    responseText = response.text;
+    console.log("[v0] Claude primary API response received");
+  } catch (primaryErr) {
+    console.error("[v0] Project primary API error, trying gateway:", primaryErr);
+    const response = await generateText({ model: gatewayModel, system: PROJECT_SYSTEM, prompt: PROJECT_PROMPT });
+    responseText = response.text;
+    console.log("[v0] Claude gateway API response received");
+  }
+
+  const response = { text: responseText };
   console.log("[v0] Claude API response received");
   
   const text = response.text.trim();

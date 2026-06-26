@@ -23,7 +23,8 @@ export async function pushFile(
   path: string,
   content: string,
   message: string,
-  branch = "main"
+  branch = "main",
+  committer?: { name: string; email: string }
 ) {
   const octokit = createOctokit(token);
 
@@ -55,6 +56,7 @@ export async function pushFile(
       content: encoded,
       sha,
       branch,
+      ...(committer ? { committer, author: committer } : {}),
     });
     console.log(`[v0] Successfully pushed ${path} to ${owner}/${repo}`);
   } catch (err) {

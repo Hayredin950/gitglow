@@ -4,8 +4,11 @@ import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Sparkles, Eye, Send, AlertCircle, CheckCircle2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import type { GeneratedProject, CommitPlan, Weakness } from "@/types/polish";
 import type { ScoreBreakdown } from "@/types/polish";
+import { getAvatarURL } from "@/lib/avatars";
+import type { AvatarStyle } from "@/lib/avatars";
 
 interface GenerationState {
   status: "idle" | "generating" | "done" | "error";
@@ -37,12 +40,19 @@ function PreviewContent() {
     messages: [],
   });
 
+  const [intakeData, setIntakeData] = useState<{ fullName?: string; avatar?: AvatarStyle; email?: string } | null>(null);
+
   useEffect(() => {
     if (!polishId) { router.push("/intake"); return; }
 
     // Load intake from session storage or re-fetch
     const intake = sessionStorage.getItem("intake");
     if (!intake) { router.push("/intake"); return; }
+
+    try {
+      const parsed = JSON.parse(intake) as { fullName?: string; avatar?: AvatarStyle; email?: string };
+      setIntakeData(parsed);
+    } catch { /* ignore */ }
 
     setState((s) => ({ ...s, status: "generating" }));
 
@@ -132,12 +142,24 @@ function PreviewContent() {
       <div className="mx-auto max-w-6xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-blue-400" />
-              Preview Your Transformation
-            </h1>
-            <p className="text-zinc-400 text-sm mt-1">Review everything before we push to GitHub</p>
+          <div className="flex items-center gap-4">
+            {intakeData?.avatar && intakeData?.fullName && (
+              <img
+                src={getAvatarURL(
+                  intakeData.avatar,
+                  intakeData.fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+                )}
+                alt="avatar"
+                className="w-12 h-12 rounded-full flex-shrink-0"
+              />
+            )}
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-blue-400" />
+                Preview Your Transformation
+              </h1>
+              <p className="text-zinc-400 text-sm mt-1">Review everything before we push to GitHub</p>
+            </div>
           </div>
           {state.status === "done" && (
             <motion.button
@@ -227,9 +249,22 @@ function PreviewContent() {
               <h3 className="font-semibold text-sm text-zinc-400 uppercase tracking-wider">Profile README</h3>
               <span className="ml-auto text-xs text-zinc-600">{state.readme.length} chars</span>
             </div>
-            <pre className="text-xs text-zinc-300 overflow-x-auto font-mono leading-relaxed max-h-[400px] overflow-y-auto whitespace-pre-wrap">
-              {state.readme}
-            </pre>
+            <div className="markdown-preview max-h-[500px] overflow-y-auto text-sm text-zinc-300 leading-relaxed">
+              <ReactMarkdown
+                components={{
+                  img: ({ src, alt }) => (
+                    <img src={src} alt={alt ?? ""} className="inline-block max-w-full rounded" loading="lazy" />
+                  ),
+                  a: ({ href, children }) => (
+                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                      {children}
+                    </a>
+                  ),
+                }}
+              >
+                {state.readme}
+              </ReactMarkdown>
+            </div>
           </motion.div>
         )}
 

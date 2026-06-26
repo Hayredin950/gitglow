@@ -31,6 +31,9 @@ export async function POST(req: Request) {
   const { polishId, readme, bio, project, commitPlan, email, avatar, templateName } = body;
   const token = dbUser.githubToken!;
   const owner = dbUser.username!;
+  const committer = email
+    ? { name: dbUser.name ?? owner, email }
+    : undefined;
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -84,7 +87,7 @@ export async function POST(req: Request) {
             await createRepo(token, readmeRepoName, "My GitHub profile README", false);
             await new Promise((r) => setTimeout(r, 1500));
           }
-          await pushFile(token, owner, readmeRepoName, "README.md", readme, "feat: add profile README ✨");
+          await pushFile(token, owner, readmeRepoName, "README.md", readme, "feat: add profile README ✨", "main", committer);
           emit("readme", "✅ Profile README created successfully!", 2, total);
         } catch (readmeErr) {
           const msg = readmeErr instanceof Error ? readmeErr.message : "Unknown error";
@@ -115,7 +118,7 @@ export async function POST(req: Request) {
                 3,
                 total
               );
-              await pushFile(token, owner, project.name, path, content ?? "", `chore: add ${path}`);
+              await pushFile(token, owner, project.name, path, content ?? "", `chore: add ${path}`, "main", committer);
               await new Promise((r) => setTimeout(r, 300));
             }
 
@@ -144,7 +147,9 @@ export async function POST(req: Request) {
               commit.repo,
               commit.path,
               commit.content,
-              commit.message
+              commit.message,
+              "main",
+              committer
             );
             pushed++;
             if (pushed % 10 === 0) {
