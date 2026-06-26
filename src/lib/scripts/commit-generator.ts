@@ -190,21 +190,60 @@ export function generateCommitPlan(templateName: string, count: number = 20): Ar
 export function generateCommitDates(baseDate: Date, count: number): Date[] {
   const dates: Date[] = [];
   const now = baseDate;
-  
+  const usedDateKeys = new Set<string>();
+
   for (let i = 0; i < count; i++) {
-    // Generate dates over the past 2-3 years
-    const daysAgo = Math.floor(Math.random() * 1095); // 3 years is ~1095 days
-    const date = new Date(now);
-    date.setDate(date.getDate() - daysAgo);
-    
-    // Random time during the day (avoid late nights to look realistic)
-    const hours = Math.floor(Math.random() * 12) + 7; // 7 AM to 6 PM
-    const minutes = Math.floor(Math.random() * 60);
-    const seconds = Math.floor(Math.random() * 60);
-    date.setHours(hours, minutes, seconds);
-    
-    dates.push(date);
+    let date: Date | null = null;
+    let attempts = 0;
+
+    while (!date && attempts < 200) {
+      // Generate dates spread across the past 2-3 years (730-1095 days)
+      const minDays = 730; // 2 years minimum
+      const maxDays = 1095; // 3 years maximum
+      const daysAgo = minDays + Math.floor(Math.random() * (maxDays - minDays));
+      const candidateDate = new Date(now);
+      candidateDate.setDate(candidateDate.getDate() - daysAgo);
+
+      // Avoid weekends most of the time to look realistic (only ~20% chance for weekend commits)
+      const dayOfWeek = candidateDate.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        if (Math.random() > 0.2) {
+          attempts++;
+          continue;
+        }
+      }
+
+      const dateKey = candidateDate.toISOString().split('T')[0];
+      if (usedDateKeys.has(dateKey)) {
+        // Allow multiple commits on the same day occasionally (but not too many)
+        const commitsOnDay = dates.filter(d => d.toISOString().split('T')[0] === dateKey).length;
+        if (commitsOnDay >= 3) {
+          attempts++;
+          continue;
+        }
+      }
+
+      // Random time during work hours (7 AM to 7 PM) to look realistic
+      const hours = Math.floor(Math.random() * 12) + 7;
+      const minutes = Math.floor(Math.random() * 60);
+      const seconds = Math.floor(Math.random() * 60);
+      candidateDate.setHours(hours, minutes, seconds);
+
+      date = candidateDate;
+      attempts++;
+    }
+
+    if (date) {
+      dates.push(date);
+    } else {
+      // Fallback to a random date if we can't find a good one
+      const fallbackDate = new Date(now);
+      fallbackDate.setDate(fallbackDate.getDate() - Math.floor(Math.random() * 1095));
+      fallbackDate.setHours(9 + Math.floor(Math.random() * 8), Math.floor(Math.random() * 60), Math.floor(Math.random() * 60));
+      dates.push(fallbackDate);
+    }
   }
-  
+
+  // Sort the dates in chronological order
   return dates.sort((a, b) => a.getTime() - b.getTime());
 }

@@ -6,6 +6,7 @@ import type { GeneratedProject, CommitPlan } from "@/types/polish";
 import { generateExecutionScript, generateSummary } from "@/lib/scripts/orchestrator";
 import { getTemplate } from "@/lib/templates/loader";
 import { generateCommits, generateCommitDates } from "@/lib/scripts/commit-generator";
+import { validateDreamRepos, forkRepo, enhanceFork } from "@/lib/scripts/dream-repo-forker";
 // CommitPlan is also re-exported from generators/commits for convenience
 
 export const dynamic = 'force-dynamic';
@@ -32,9 +33,10 @@ export async function POST(req: Request) {
     earnBadges?: boolean;
     scriptBased?: boolean;
     selectedTemplates?: string[];
+    dreamRepos?: string[];
   };
 
-  const { polishId, readme, bio, project, commitPlan, email, avatar, templateName, earnBadges, scriptBased, selectedTemplates } = body;
+  const { polishId, readme, bio, project, commitPlan, email, avatar, templateName, earnBadges, scriptBased, selectedTemplates, dreamRepos } = body;
   const token = dbUser.githubToken!;
   const owner = dbUser.username!;
   const committer = email
@@ -59,6 +61,9 @@ export async function POST(req: Request) {
         let total = 5;
         if (scriptBased && selectedTemplates) {
           total = 5 + selectedTemplates.length; // Additional steps for each template
+        }
+        if (dreamRepos && dreamRepos.length > 0) {
+          total += dreamRepos.length;
         }
         if (earnBadges) total += 1;
 
@@ -115,10 +120,10 @@ export async function POST(req: Request) {
 
         // Step 3: Create project repos (script-based approach creates multiple repos)
         const reposCreated: string[] = [];
+        let currentStep = 3;
         
         if (scriptBased && selectedTemplates) {
           // Script-based approach: create multiple repos from templates
-          let currentStep = 3;
           for (let i = 0; i < selectedTemplates.length; i++) {
             const templateId = selectedTemplates[i];
             const template = getTemplate(templateId);
@@ -178,7 +183,7 @@ export async function POST(req: Request) {
         } else if (project) {
           // Original single project approach
           try {
-            emit("project", `Creating ${project.name} repository...`, 3, total);
+            emit("project", `Creating ${project.name} repository...`, currentStep, total);
             const projExists = await repoExists(token, owner, project.name);
             if (!projExists) {
               await createRepo(token, project.name, project.description, false);
@@ -195,7 +200,7 @@ export async function POST(req: Request) {
               emit(
                 "project",
                 `Pushing ${path} (${i + 1}/${fileEntries.length})...`,
-                3,
+                currentStep,
                 total
               );
               await pushFile(token, owner, project.name, path, content ?? "", `chore: add ${path}`, "main", committer);
@@ -206,14 +211,49 @@ export async function POST(req: Request) {
               await setRepoTopics(token, owner, project.name, project.topics);
             }
             reposCreated.push(project.name);
-            emit("project", `✅ Project repository created with ${fileEntries.length} files!`, 3, total);
+            emit("project", `✅ Project repository created with ${fileEntries.length} files!`, currentStep, total);
+            currentStep++;
           } catch (projErr) {
             const msg = projErr instanceof Error ? projErr.message : "Unknown error";
             console.error("[v0] Project deployment failed:", msg);
             throw new Error(`Failed to create project repository: ${msg}`);
           }
         } else {
-          emit("project", "No project generated — skipping repo creation.", 3, total);
+          emit("project", "No project generated — skipping repo creation.", currentStep, total);
+        }
+
+        // Step 3.5: Process Dream Repos
+        if (dreamRepos && dreamRepos.length > 0) {
+          const { valid, invalid } = validateDreamRepos(dreamRepos);
+          
+          if (invalid.length > 0) {
+            emit("dream-repo", `⚠️ Skipping ${invalid.length} invalid repo URLs: ${invalid.join(', ')}`, currentStep, total);
+          }
+          
+          for (let i = 0; i < valid.length; i++) {
+            const repo = valid[i];
+            try {
+              emit("dream-repo", `Forking ${repo.owner}/${repo.repo}...`, currentStep, total);
+              const forkedRepoFullName = await forkRepo(token, repo.owner, repo.repo);
+              const [forkedOwner, forkedRepoName] = forkedRepoFullName.split('/');
+              
+              // Wait a bit for the forked repo to be available
+              await new Promise(r => setTimeout(r, 3000));
+              
+              // Enhance the forked repo
+              emit("dream-repo", `Enhancing ${forkedRepoName}...`, currentStep, total);
+              await enhanceFork(token, forkedOwner, forkedRepoName, dbUser.name ?? owner);
+              
+              reposCreated.push(forkedRepoName);
+              emit("dream-repo", `✅ Successfully forked and enhanced ${forkedRepoName}!`, currentStep, total);
+              currentStep++;
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : "Unknown error";
+              console.error(`[v0] Failed to fork or enhance repo ${repo.owner}/${repo.repo}:`, msg);
+              emit("dream-repo", `⚠️ Failed to process ${repo.owner}/${repo.repo}: ${msg}`, currentStep, total);
+              // Continue with the next repo
+            }
+          }
         }
 
         // Step 4: Push commits

@@ -2,6 +2,8 @@
  * Script-based Dream Repo Forking System
  * Forks and enhances repos from other GitHub users
  */
+import { createOctokit } from "@/lib/github/client";
+import type { RestEndpointMethodTypes } from "@octokit/rest";
 
 export interface DreamRepo {
   url: string;
@@ -125,6 +127,181 @@ git push origin main
   }).join('\n');
   
   return instructions;
+}
+
+/**
+ * Fork a repository using GitHub API */
+export async function forkRepo(
+  token: string,
+  repoOwner: string,
+  repoName: string
+): Promise<string> {
+  const octokit = createOctokit(token);
+  const { data } = await octokit.repos.createFork({
+    owner: repoOwner,
+    repo: repoName,
+  });
+  return data.full_name;
+}
+
+/**
+ * Get a file from a repository */
+async function getRepoFile(
+  token: string,
+  owner: string,
+  repo: string,
+  path: string
+): Promise<string | null> {
+  const octokit = createOctokit(token);
+  try {
+    const { data } = await octokit.repos.getContent({
+      owner,
+      repo,
+      path,
+    });
+    if ("content" in data && data.content) {
+      return Buffer.from(data.content, "base64").toString("utf-8");
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get repo default branch
+ */
+async function getRepoDefaultBranch(
+  token: string,
+  owner: string,
+  repo: string
+): Promise<string> {
+  const octokit = createOctokit(token);
+  const { data } = await octokit.repos.get({
+    owner,
+    repo,
+  });
+  return data.default_branch;
+}
+
+/**
+ * Create a branch with changes and commit it
+ */
+export async function enhanceFork(
+  token: string,
+  owner: string,
+  repo: string,
+  fullName: string
+) {
+  const octokit = createOctokit(token);
+  const defaultBranch = await getRepoDefaultBranch(token, owner, repo);
+
+  // Get current SHA from default branch
+  const { data: refData } = await octokit.git.getRef({
+    owner,
+    repo,
+    ref: `heads/${defaultBranch}`,
+  });
+
+  // Create a new branch for the enhancement
+  const branchName = `enhance-profile-${Date.now()}`;
+  await octokit.git.createRef({
+    owner,
+    repo,
+    ref: `refs/heads/${branchName}`,
+    sha: refData.object.sha,
+  });
+
+  const tree: RestEndpointMethodTypes["git"]["createTree"]["parameters"]["tree"] = [];
+
+  // Check if LICENSE exists
+  const existingLicense = await getRepoFile(token, owner, repo, "LICENSE");
+  if (!existingLicense) {
+    const licenseContent = `MIT License
+
+Copyright (c) ${new Date().getFullYear()} ${fullName}
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+`;
+    tree.push({
+      path: "LICENSE",
+      mode: "100644",
+      type: "blob",
+      content: licenseContent,
+    });
+  }
+
+  // Create a simple README addition
+  const existingReadme = await getRepoFile(token, owner, repo, "README.md");
+  const readmeContent = existingReadme || `# ${repo}
+
+Forked from ${repo}
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+## About
+
+This is an enhanced fork of ${owner}/${repo}.
+`;
+  tree.push({
+    path: "README.md",
+    mode: "100644",
+    type: "blob",
+    content: readmeContent,
+  });
+
+  // Create tree
+  const { data: treeData } = await octokit.git.createTree({
+    owner,
+    repo,
+    base_tree: refData.object.sha,
+    tree,
+  });
+
+  // Create commit
+  const { data: commitData } = await octokit.git.createCommit({
+    owner,
+    repo,
+    message: "docs: enhance repo",
+    tree: treeData.sha,
+    parents: [refData.object.sha],
+  });
+
+  // Update branch
+  await octokit.git.updateRef({
+    owner,
+    repo,
+    ref: `heads/${branchName}`,
+    sha: commitData.sha,
+  });
+
+  // Create PR
+  await octokit.pulls.create({
+    owner,
+    repo,
+    title: "Enhance repo for portfolio",
+    head: branchName,
+    base: defaultBranch,
+    body: "This PR adds a LICENSE and updates the README to make it portfolio-ready.",
+  });
+
+  return branchName;
 }
 
 export function generateRepoDescription(repo: DreamRepo, goal: string): string {

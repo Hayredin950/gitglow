@@ -4,7 +4,7 @@ import type { UserIntake } from "@/types/polish";
 import { getAvatarURL } from "@/lib/avatars";
 
 function buildStaticReadme(profile: GitHubProfile, intake: UserIntake): string {
-  const { fullName, skills, goal, location, website, avatar } = intake;
+  const { fullName, skills, goal, location, website } = intake;
   const tone = (intake as any).tone || "professional";
   const username = profile.login;
   const skillIcons = skills.slice(0, 8).map(s => s.toLowerCase().replace(/[^a-z0-9]/g, "")).join(",");
@@ -17,15 +17,9 @@ function buildStaticReadme(profile: GitHubProfile, intake: UserIntake): string {
     : "📚 Always learning";
   const toneEmoji = tone === "hacker" ? "⚡" : tone === "casual" ? "👋" : "👨‍💻";
   
-  // Generate initials from full name
-  const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  const avatarURL = getAvatarURL(avatar, initials);
-
   return `<div align="center">
 
 ![Header](https://capsule-render.vercel.app/api?type=waving&color=gradient&height=200&section=header&text=${encodeURIComponent(fullName)}&fontSize=50&fontAlignY=35&animation=twinkling)
-
-<img src="${avatarURL}" alt="Profile Avatar" width="120" height="120" style="border-radius: 50%; border: 4px solid #3B82F6; margin: 20px 0;">
 
 [![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&duration=3000&pause=1000&color=3B82F6&center=true&vCenter=true&width=600&lines=${encodeURIComponent(goalLine)};${encodeURIComponent("Skills: " + skills.slice(0, 3).join(" • "))};${encodeURIComponent("Let's build something great!")})](https://git.io/typing-svg)
 
@@ -80,7 +74,7 @@ export async function generateProfileReadme(
   profile: GitHubProfile,
   intake: UserIntake
 ): Promise<string> {
-  const { fullName, skills, goal, avatar } = intake;
+  const { fullName, skills, goal } = intake;
   const tone = (intake as any).tone || "professional";
   const username = profile.login;
 
@@ -101,10 +95,6 @@ export async function generateProfileReadme(
       ? "showcasing their portfolio and projects"
       : "learning and growing as a developer";
 
-  // Generate initials and avatar URL
-  const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  const avatarURL = getAvatarURL(avatar, initials);
-
   const message = `Generate a beautiful GitHub profile README.md for ${fullName} (GitHub: ${username}).
 
 Context:
@@ -112,21 +102,19 @@ Context:
 - Goal: ${goalDesc}
 - Tone: ${toneDesc}
 - Location: ${profile.location ?? "not specified"}
-- Avatar Style: ${avatar}
 
 Requirements (use ALL of these):
 1. Animated wave header using capsule-render: https://capsule-render.vercel.app/api?type=waving&color=gradient&height=200&section=header&text=${encodeURIComponent(fullName)}&fontSize=50&fontAlignY=35&animation=twinkling
-2. Profile avatar image: <img src="${avatarURL}" alt="Profile Avatar" width="120" height="120" style="border-radius: 50%; border: 4px solid #3B82F6; margin: 20px 0;">
-3. Typing SVG: https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&duration=3000&pause=1000&color=3B82F6&center=true&vCenter=true&multiline=true&width=600&lines=...personalized+lines...
-4. About Me section as a JSON code block (creative, fun)
-5. Skill icons from: https://skillicons.dev/icons?i=COMMA_SEPARATED_SKILLS (use actual icon IDs)
-6. GitHub Stats: https://github-readme-stats.vercel.app/api?username=${username}&theme=tokyonight&show_icons=true&hide_border=true&count_private=true
-7. GitHub Streak: https://streak-stats.demolab.com?user=${username}&theme=tokyonight&hide_border=true
-8. Top Languages: https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&theme=tokyonight&layout=compact&hide_border=true
-9. Activity graph: https://github-readme-activity-graph.vercel.app/graph?username=${username}&theme=tokyo-night&hide_border=true
-10. Trophies: https://github-profile-trophy.vercel.app/?username=${username}&theme=dracula&column=4&margin-w=8
-11. A "Powered by GitGlow ✨" badge at the bottom: [![Polished by GitGlow](https://img.shields.io/badge/Polished%20by-GitGlow%20✨-3B82F6?style=flat-square)](https://gitglow.dev)
-12. Wave footer with capsule-render type=waving section=footer
+2. Typing SVG: https://readme-typing-svg.demolab.com?font=Fira+Code&size=22&duration=3000&pause=1000&color=3B82F6&center=true&vCenter=true&multiline=true&width=600&lines=...personalized+lines...
+3. About Me section as a JSON code block (creative, fun)
+4. Skill icons from: https://skillicons.dev/icons?i=COMMA_SEPARATED_SKILLS (use actual icon IDs)
+5. GitHub Stats: https://github-readme-stats.vercel.app/api?username=${username}&theme=tokyonight&show_icons=true&hide_border=true&count_private=true
+6. GitHub Streak: https://streak-stats.demolab.com?user=${username}&theme=tokyonight&hide_border=true
+7. Top Languages: https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&theme=tokyonight&layout=compact&hide_border=true
+8. Activity graph: https://github-readme-activity-graph.vercel.app/graph?username=${username}&theme=tokyo-night&hide_border=true
+9. Trophies: https://github-profile-trophy.vercel.app/?username=${username}&theme=dracula&column=4&margin-w=8
+10. A "Powered by GitGlow ✨" badge at the bottom: [![Polished by GitGlow](https://img.shields.io/badge/Polished%20by-GitGlow%20✨-3B82F6?style=flat-square)](https://gitglow.dev)
+11. Wave footer with capsule-render type=waving section=footer
 
 Output ONLY the raw markdown, no explanation, no code fences around the whole thing.`;
 
@@ -147,7 +135,7 @@ export async function* streamProfileReadme(
   profile: GitHubProfile,
   intake: UserIntake
 ): AsyncGenerator<string> {
-  const { fullName, skills, goal, avatar } = intake;
+  const { fullName, skills, goal } = intake;
   const tone = (intake as any).tone || "professional";
   const username = profile.login;
   const skillsStr = skills.join(", ");
@@ -156,12 +144,8 @@ export async function* streamProfileReadme(
     throw new Error("Invalid profile data: missing username or fullName");
   }
 
-  // Generate initials and avatar URL
-  const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  const avatarURL = getAvatarURL(avatar, initials);
-
   const README_SYSTEM = `You are an expert GitHub profile designer. Generate stunning profile READMEs that get developers hired. Output ONLY raw markdown, no explanations.`;
-  const README_PROMPT = `Generate a beautiful GitHub profile README for ${fullName} (username: ${username}). Skills: ${skillsStr}. Goal: ${goal}. Tone: ${tone}. Avatar style: ${avatar}. Include: wave header (capsule-render), profile avatar image (${avatarURL}), typing SVG, about-me JSON block, skill icons (skillicons.dev), GitHub stats, streak, top languages, activity graph, trophies, GitGlow badge at bottom, wave footer. Use tokyonight theme throughout. Output raw markdown only.`;
+  const README_PROMPT = `Generate a beautiful GitHub profile README for ${fullName} (username: ${username}). Skills: ${skillsStr}. Goal: ${goal}. Tone: ${tone}. Include: wave header (capsule-render), typing SVG, about-me JSON block, skill icons (skillicons.dev), GitHub stats, streak, top languages, activity graph, trophies, GitGlow badge at bottom, wave footer. Use tokyonight theme throughout. Output raw markdown only.`;
 
   // Try primary model first; fall back to gateway, then static template
   let streamResult;

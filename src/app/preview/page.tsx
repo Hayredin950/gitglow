@@ -164,6 +164,7 @@ function PreviewContent() {
       templateName: intakeData.templateName,
       scriptBased: state.scriptBased,
       selectedTemplates: state.selectedTemplates,
+      dreamRepos: intakeData.dreamRepos,
     }));
     router.push(`/deploy?polishId=${polishId}`);
   }
