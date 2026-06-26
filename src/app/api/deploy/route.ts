@@ -386,6 +386,10 @@ export async function POST(req: Request) {
 
         // Step 6: Complete
         const scoreAfter = 85 + Math.floor(Math.random() * 10);
+        // Generate a share token if not already present
+        const existingPolish = await db.polish.findUnique({ where: { id: polishId } });
+        const shareToken = existingPolish?.shareToken || `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+        
         await db.polish.update({
           where: { id: polishId },
           data: {
@@ -398,6 +402,7 @@ export async function POST(req: Request) {
             templateName: templateName || undefined,
             completedAt: new Date(),
             isPublic: true, // Make completed profiles visible in gallery
+            shareToken, // Generate share token for public viewing
           },
         });
 
