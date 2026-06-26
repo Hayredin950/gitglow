@@ -4,7 +4,8 @@ import type { UserIntake } from "@/types/polish";
 import { getAvatarURL } from "@/lib/avatars";
 
 function buildStaticReadme(profile: GitHubProfile, intake: UserIntake): string {
-  const { fullName, skills, goal, tone, location, website, avatar } = intake;
+  const { fullName, skills, goal, location, website, avatar } = intake;
+  const tone = (intake as any).tone || "professional";
   const username = profile.login;
   const skillIcons = skills.slice(0, 8).map(s => s.toLowerCase().replace(/[^a-z0-9]/g, "")).join(",");
   const goalLine = goal === "job"
@@ -79,7 +80,8 @@ export async function generateProfileReadme(
   profile: GitHubProfile,
   intake: UserIntake
 ): Promise<string> {
-  const { fullName, skills, goal, tone, avatar } = intake;
+  const { fullName, skills, goal, avatar } = intake;
+  const tone = (intake as any).tone || "professional";
   const username = profile.login;
 
   const skillsStr = skills.join(", ");
@@ -145,7 +147,8 @@ export async function* streamProfileReadme(
   profile: GitHubProfile,
   intake: UserIntake
 ): AsyncGenerator<string> {
-  const { fullName, skills, goal, tone, avatar } = intake;
+  const { fullName, skills, goal, avatar } = intake;
+  const tone = (intake as any).tone || "professional";
   const username = profile.login;
   const skillsStr = skills.join(", ");
 
