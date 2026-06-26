@@ -1,4 +1,5 @@
 import { defaultModel } from "@/lib/ai/client";
+import { generateText } from "ai";
 import type { ProjectSpec, GeneratedProject } from "@/types/polish";
 
 export async function generateProject(
@@ -7,7 +8,6 @@ export async function generateProject(
 ): Promise<GeneratedProject> {
   console.log("[v0] Calling Claude API to generate project:", spec.name);
   
-  const { generateText } = await import("ai");
   const response = await generateText({
     model: defaultModel,
     system: `You are a senior software engineer who writes clean, production-quality code. Generate complete, working project files. Return ONLY a JSON object with this structure:

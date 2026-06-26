@@ -1,4 +1,5 @@
-import { generateText, defaultModel } from "@/lib/ai/client";
+import { defaultModel } from "@/lib/ai/client";
+import { generateText, streamText } from "ai";
 import type { GitHubProfile } from "@/types/github";
 import type { UserIntake } from "@/types/polish";
 
@@ -50,7 +51,6 @@ Requirements (use ALL of these):
 Output ONLY the raw markdown, no explanation, no code fences around the whole thing.`;
 
   try {
-    const { generateText } = await import("ai");
     const response = await generateText({
       model: defaultModel,
       prompt: message,
@@ -76,7 +76,6 @@ export async function* streamProfileReadme(
   }
 
   try {
-    const { streamText } = await import("ai");
     const stream = await streamText({
       model: defaultModel,
       system: `You are an expert GitHub profile designer. Generate stunning profile READMEs that get developers hired. Output ONLY raw markdown, no explanations.`,
