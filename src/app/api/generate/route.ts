@@ -6,6 +6,7 @@ import { generateBio } from "@/lib/ai/generators/bio";
 import { generateProject, inferProjectFromSkills } from "@/lib/ai/generators/project";
 import { generateCommitSchedule } from "@/lib/ai/generators/commits";
 import { db } from "@/lib/db";
+import { getTemplate } from "@/lib/templates/loader";
 import type { UserIntake, GeneratedProject, CommitPlan } from "@/types/polish";
 
 export const dynamic = 'force-dynamic';
@@ -66,31 +67,56 @@ export async function POST(req: Request) {
         emit("readme_complete", { readme });
 
         // Phase 4: Generate project
-        emit("status", { message: "Generating your project repository..." });
-        const spec = inferProjectFromSkills(intake.skills, intake.projectIdea);
-        console.log("[v0] Project spec:", spec);
+        emit("status", { message: "Preparing your project repository..." });
         let project: GeneratedProject | null = null;
-        try {
-          project = await generateProject(spec, intake.fullName);
-          console.log("[v0] Generated project:", project?.name, "with", Object.keys(project?.files ?? {}).length, "files");
-        } catch (projErr) {
-          const projMsg = projErr instanceof Error ? projErr.message : "Project generation failed";
-          console.error("[v0] Project generation error:", projMsg);
-          
-          // Create a fallback project with basic structure
-          console.log("[v0] Creating fallback project...");
-          project = {
-            name: spec.name,
-            description: spec.description,
-            topics: ["portfolio", "starter"],
-            files: {
-              "README.md": `# ${spec.name}\n\n${spec.description}\n\n## Getting Started\n\n\`\`\`\nbash\nnpm install\nnpm run dev\n\`\`\`\n\n## Tech Stack\n\n- ${spec.language}\n${spec.framework ? `- ${spec.framework}` : ''}\n`,
-              ".gitignore": `node_modules/\n.env\n.DS_Store\ndist/\nbuild/\n`,
-              "LICENSE": `MIT License\n\nCopyright (c) 2024 ${intake.fullName}\n\nPermission is hereby granted, free of charge...`,
+
+        if (intake.useTemplate && intake.templateName) {
+          // Use pre-built template
+          console.log("[v0] Loading template:", intake.templateName);
+          try {
+            project = getTemplate(intake.templateName);
+            if (project) {
+              console.log("[v0] Loaded template project:", project.name, "with", Object.keys(project.files).length, "files");
+              emit("status", { message: `Using ${project.name} template` });
+            } else {
+              throw new Error(`Template not found: ${intake.templateName}`);
             }
-          };
-          emit("status", { message: `Using basic project template` });
+          } catch (templateErr) {
+            const templateMsg = templateErr instanceof Error ? templateErr.message : "Template loading failed";
+            console.error("[v0] Template loading error:", templateMsg);
+            emit("status", { message: "Template not available, using AI generation instead" });
+            intake.useTemplate = false;
+          }
         }
+
+        // If not using template or template failed, generate with AI
+        if (!project) {
+          emit("status", { message: "Generating your project repository..." });
+          const spec = inferProjectFromSkills(intake.skills, intake.projectIdea);
+          console.log("[v0] Project spec:", spec);
+          try {
+            project = await generateProject(spec, intake.fullName);
+            console.log("[v0] Generated project:", project?.name, "with", Object.keys(project?.files ?? {}).length, "files");
+          } catch (projErr) {
+            const projMsg = projErr instanceof Error ? projErr.message : "Project generation failed";
+            console.error("[v0] Project generation error:", projMsg);
+            
+            // Create a fallback project with basic structure
+            console.log("[v0] Creating fallback project...");
+            project = {
+              name: spec.name,
+              description: spec.description,
+              topics: ["portfolio", "starter"],
+              files: {
+                "README.md": `# ${spec.name}\n\n${spec.description}\n\n## Getting Started\n\n\`\`\`\nbash\nnpm install\nnpm run dev\n\`\`\`\n\n## Tech Stack\n\n- ${spec.language}\n${spec.framework ? `- ${spec.framework}` : ''}\n`,
+                ".gitignore": `node_modules/\n.env\n.DS_Store\ndist/\nbuild/\n`,
+                "LICENSE": `MIT License\n\nCopyright (c) 2024 ${intake.fullName}\n\nPermission is hereby granted, free of charge...`,
+              }
+            };
+            emit("status", { message: `Using basic project template` });
+          }
+        }
+
         emit("project_complete", { project });
 
         // Phase 5: Plan commits

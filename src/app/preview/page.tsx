@@ -111,12 +111,18 @@ function PreviewContent() {
 
   function handleDeploy() {
     // Store generation result for deploy page
+    const intake = sessionStorage.getItem("intake");
+    const intakeData = intake ? JSON.parse(intake) : {};
+    
     sessionStorage.setItem("generationResult", JSON.stringify({
       readme: state.readme,
       bio: state.bio,
       project: state.project,
       commitPlan: state.commitPlan,
       scoreBefore: state.scoreBefore,
+      email: intakeData.email,
+      avatar: intakeData.avatar,
+      templateName: intakeData.templateName,
     }));
     router.push(`/deploy?polishId=${polishId}`);
   }

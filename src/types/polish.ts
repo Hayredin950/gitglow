@@ -1,11 +1,15 @@
 export interface UserIntake {
   fullName: string;
+  email: string;
   goal: "job" | "opensource" | "portfolio" | "learning";
   skills: string[];
   projectIdea?: string;
   tone: "professional" | "casual" | "hacker";
   location?: string;
   website?: string;
+  avatar: "professional" | "creative" | "classic";
+  useTemplate: boolean;
+  templateName?: "node-rest-api" | "python-utility" | "portfolio" | "nlp-toolkit" | "cache-store" | "delivery-api" | "calorie-tracker";
 }
 
 export interface ScoreBreakdown {
