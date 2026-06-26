@@ -133,3 +133,101 @@ export async function repoExists(
     return false;
   }
 }
+
+export async function createBranch(
+  token: string,
+  owner: string,
+  repo: string,
+  branch: string,
+  fromBranch = "main"
+) {
+  const octokit = createOctokit(token);
+  
+  // Get the SHA of the latest commit on the base branch
+  const { data: refData } = await octokit.git.getRef({
+    owner,
+    repo,
+    ref: `heads/${fromBranch}`,
+  });
+  
+  // Create the new branch
+  const { data } = await octokit.git.createRef({
+    owner,
+    repo,
+    ref: `refs/heads/${branch}`,
+    sha: refData.object.sha,
+  });
+  
+  return data;
+}
+
+export async function createPullRequest(
+  token: string,
+  owner: string,
+  repo: string,
+  title: string,
+  body: string,
+  head: string,
+  base = "main"
+) {
+  const octokit = createOctokit(token);
+  
+  const { data } = await octokit.pulls.create({
+    owner,
+    repo,
+    title,
+    body,
+    head,
+    base,
+  });
+  
+  return data;
+}
+
+export async function mergePullRequest(
+  token: string,
+  owner: string,
+  repo: string,
+  pullNumber: number
+) {
+  const octokit = createOctokit(token);
+  
+  const { data } = await octokit.pulls.merge({
+    owner,
+    repo,
+    pull_number: pullNumber,
+    commit_title: `Merge PR #${pullNumber}`,
+    commit_message: "Automated merge for badge earning",
+    merge_method: "squash",
+  });
+  
+  return data;
+}
+
+export async function deleteBranch(
+  token: string,
+  owner: string,
+  repo: string,
+  branch: string
+) {
+  const octokit = createOctokit(token);
+  
+  await octokit.git.deleteRef({
+    owner,
+    repo,
+    ref: `heads/${branch}`,
+  });
+}
+
+export async function deleteRepo(
+  token: string,
+  owner: string,
+  repo: string
+) {
+  const octokit = createOctokit(token);
+  
+  await octokit.repos.delete({
+    owner,
+    repo,
+  });
+}

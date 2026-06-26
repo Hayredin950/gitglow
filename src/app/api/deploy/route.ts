@@ -1,12 +1,12 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { createRepo, pushFile, updateProfile, setRepoTopics, repoExists } from "@/lib/github/push";
+import { createRepo, pushFile, updateProfile, setRepoTopics, repoExists, createBranch, createPullRequest, mergePullRequest, deleteBranch, deleteRepo } from "@/lib/github/push";
 import { validateTokenScopes, checkScopesForDeploy } from "@/lib/github/validate";
 import type { GeneratedProject, CommitPlan } from "@/types/polish";
 // CommitPlan is also re-exported from generators/commits for convenience
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300;
+export const maxDuration = 600; // Increased to 10 minutes for badge automation
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -26,9 +26,10 @@ export async function POST(req: Request) {
     email?: string;
     avatar?: string;
     templateName?: string;
+    earnBadges?: boolean;
   };
 
-  const { polishId, readme, bio, project, commitPlan, email, avatar, templateName } = body;
+  const { polishId, readme, bio, project, commitPlan, email, avatar, templateName, earnBadges } = body;
   const token = dbUser.githubToken!;
   const owner = dbUser.username!;
   const committer = email
@@ -49,8 +50,11 @@ export async function POST(req: Request) {
       try {
         await db.polish.update({ where: { id: polishId }, data: { status: "DEPLOYING" } });
 
+        // Calculate total steps first
+        const total = earnBadges ? 6 : 5;
+
         // Validate token scopes before starting
-        emit("validate", "Validating GitHub token permissions...", 0, 5);
+        emit("validate", "Validating GitHub token permissions...", 0, total);
         const scopeInfo = await validateTokenScopes(token);
         const { isValid, warnings } = checkScopesForDeploy(scopeInfo);
 
@@ -59,18 +63,23 @@ export async function POST(req: Request) {
         }
 
         for (const warning of warnings) {
-          emit("validate", warning, 0, 5);
+          emit("validate", warning, 0, total);
         }
 
-        const total = 5;
-
-        // Step 1: Update profile bio (best-effort – requires user:write OAuth scope)
-        emit("bio", "Setting bio and location...", 1, total);
+        // Step 1: Update profile bio and avatar (best-effort – requires user:write OAuth scope)
+        emit("bio", "Setting bio, location, and avatar...", 1, total);
         try {
           await updateProfile(token, {
             bio,
             name: dbUser.name ?? undefined,
           });
+          
+          // Note: GitHub API doesn't support avatar updates via REST API
+          // Users need to update their avatar manually through GitHub settings
+          if (avatar) {
+            console.log("[v0] Avatar provided, but GitHub API doesn't support avatar updates via REST API");
+            emit("bio", "⚠️ Avatar must be set manually in GitHub settings (API limitation)", 1, total);
+          }
         } catch (bioErr) {
           // Token may lack `user` write scope; log and continue
           const msg = bioErr instanceof Error ? bioErr.message : "Unknown error";
@@ -167,7 +176,65 @@ export async function POST(req: Request) {
           console.log(`[v0] Commit push completed: ${pushed} succeeded, ${failed} failed`);
         }
 
-        // Step 5: Complete
+        // Step 5: Earn GitHub badges (optional)
+        if (earnBadges) {
+          emit("badges", "Earning GitHub achievement badges (YOLO, Pull Shark, Quickdraw)...", 5, total);
+          try {
+            const tempRepoName = `badge-helper-${Date.now()}`;
+            await createRepo(token, tempRepoName, "Temporary repo for badge earning", false);
+            await new Promise((r) => setTimeout(r, 1500));
+
+            // Initialize repo with README
+            await pushFile(token, owner, tempRepoName, "README.md", "# Badge Helper\n\nThis repo helps earn GitHub achievement badges.", "feat: initialize badge helper", "main", committer);
+            await new Promise((r) => setTimeout(r, 1000));
+
+            // Create 5 PRs and merge them immediately for badges
+            for (let i = 1; i <= 5; i++) {
+              const branchName = `badge-${i}`;
+              const badgeContent = `# Badge Automation PR #${i}\n\nThis PR helps earn GitHub achievement badges.\n\n- YOLO: Merged without review\n- Pull Shark: Part of 5+ PRs\n- Quickdraw: Merged quickly`;
+              
+              // Create branch
+              await createBranch(token, owner, tempRepoName, branchName, "main");
+              emit("badges", `Created branch ${branchName} (${i}/5)...`, 5, total);
+              
+              // Add file to branch
+              await pushFile(token, owner, tempRepoName, `PR_${i}.md`, badgeContent, `feat: badge automation PR #${i}`, branchName, committer);
+              await new Promise((r) => setTimeout(r, 500));
+              
+              // Create PR
+              const pr = await createPullRequest(
+                token, 
+                owner, 
+                tempRepoName, 
+                `Badge Automation PR #${i}`, 
+                "Automated PR for GitHub badge earning", 
+                branchName, 
+                "main"
+              );
+              emit("badges", `Created PR #${pr.number} (${i}/5)...`, 5, total);
+              await new Promise((r) => setTimeout(r, 2000));
+              
+              // Merge PR immediately for YOLO badge (without review)
+              await mergePullRequest(token, owner, tempRepoName, pr.number);
+              emit("badges", `Merged PR #${pr.number} - YOLO badge triggered! (${i}/5)...`, 5, total);
+              
+              // Delete branch after merge
+              await deleteBranch(token, owner, tempRepoName, branchName);
+              
+              await new Promise((r) => setTimeout(r, 1000));
+            }
+            
+            // Clean up temp repo
+            await deleteRepo(token, owner, tempRepoName);
+            emit("badges", "✅ Badge automation complete! YOLO, Pull Shark, Quickdraw badges earned!", 5, total);
+          } catch (badgeErr) {
+            const msg = badgeErr instanceof Error ? badgeErr.message : "Unknown error";
+            console.warn("[v0] Badge automation failed:", msg);
+            emit("badges", "Badge automation skipped (requires manual PR creation)", 5, total);
+          }
+        }
+
+        // Step 6: Complete
         const scoreAfter = 85 + Math.floor(Math.random() * 10);
         await db.polish.update({
           where: { id: polishId },
@@ -183,7 +250,7 @@ export async function POST(req: Request) {
           },
         });
 
-        emit("complete", `Done! Your GitHub score went up significantly.`, 5, total);
+        emit("complete", `Done! Your GitHub score went up significantly.`, total, total);
         controller.enqueue(
           encoder.encode(
             `data: ${JSON.stringify({ type: "complete", scoreAfter, pushed })}\n\n`

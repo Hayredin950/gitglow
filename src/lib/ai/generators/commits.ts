@@ -16,7 +16,121 @@ export function generateCommitSchedule(
   // Pick random days with realistic distribution (more on weekdays)
   const activeDays = pickActiveDays(totalDays, targetCount);
 
-  const messages = [
+  // Project-specific commit messages for more realism
+  const projectMessages: Record<string, string[]> = {
+    "node-rest-api": [
+      "feat: implement JWT authentication middleware",
+      "fix: resolve race condition in user creation",
+      "feat: add rate limiting to API endpoints",
+      "refactor: extract database queries to repository layer",
+      "docs: update API documentation with new endpoints",
+      "fix: handle MongoDB connection errors gracefully",
+      "feat: add refresh token rotation",
+      "style: format code with Prettier",
+      "chore: upgrade Express to latest version",
+      "test: add integration tests for auth flow",
+      "feat: implement request validation middleware",
+      "fix: resolve CORS issues in production",
+      "refactor: separate routes into modules",
+      "docs: add environment variable documentation",
+      "feat: add pagination to user list endpoint",
+      "fix: handle malformed JSON in request body",
+      "chore: update dependencies for security",
+      "feat: add logging with Winston",
+      "refactor: improve error handling consistency",
+      "fix: resolve memory leak in data processing",
+    ],
+    "python-utility": [
+      "feat: add new CLI command for file processing",
+      "fix: resolve argument parsing issue",
+      "feat: implement progress bar for long operations",
+      "refactor: extract configuration to separate module",
+      "docs: update usage examples in README",
+      "fix: handle file permission errors",
+      "feat: add colored output support",
+      "style: apply Black formatting",
+      "chore: update Click dependency",
+      "test: add unit tests for helper functions",
+      "feat: implement retry logic for network requests",
+      "fix: resolve encoding issues with special characters",
+      "refactor: simplify command structure",
+      "docs: add troubleshooting section",
+      "feat: add configuration file support",
+      "fix: handle interrupt signals gracefully",
+      "chore: update requirements.txt",
+      "feat: add verbose logging mode",
+      "refactor: improve error messages",
+      "fix: resolve path handling on Windows",
+    ],
+    "portfolio": [
+      "feat: add project gallery with filtering",
+      "fix: resolve responsive design issues on mobile",
+      "feat: implement dark mode toggle",
+      "refactor: extract components to separate files",
+      "docs: update deployment instructions",
+      "fix: handle missing project images",
+      "feat: add contact form validation",
+      "style: improve Tailwind class organization",
+      "chore: upgrade Next.js to latest version",
+      "test: add component tests with Jest",
+      "feat: implement SEO optimization",
+      "fix: resolve hydration errors",
+      "refactor: create reusable UI components",
+      "docs: add component documentation",
+      "feat: add smooth scroll behavior",
+      "fix: resolve accessibility issues",
+      "chore: optimize bundle size",
+      "feat: add animation with Framer Motion",
+      "refactor: improve state management",
+      "fix: resolve navigation bugs",
+    ],
+    "nlp-toolkit": [
+      "feat: add sentiment analysis pipeline",
+      "fix: resolve tokenization issues with emojis",
+      "feat: implement named entity recognition",
+      "refactor: optimize text processing performance",
+      "docs: add API documentation for analyzer",
+      "fix: handle empty input gracefully",
+      "feat: add language detection support",
+      "style: format code with Black",
+      "chore: update NLTK data models",
+      "test: add accuracy tests for classifiers",
+      "feat: implement text summarization",
+      "fix: resolve memory issues with large texts",
+      "refactor: create modular pipeline stages",
+      "docs: add usage examples for each feature",
+      "feat: add custom tokenizer support",
+      "fix: handle encoding issues",
+      "chore: update scikit-learn dependency",
+      "feat: add batch processing support",
+      "refactor: improve error handling",
+      "fix: resolve model loading issues",
+    ],
+    "cache-store": [
+      "feat: implement LRU eviction policy",
+      "fix: resolve thread safety issues",
+      "feat: add cache statistics tracking",
+      "refactor: optimize memory usage",
+      "docs: add performance benchmarks",
+      "fix: handle TTL expiration correctly",
+      "feat: add cache persistence option",
+      "style: improve code readability",
+      "chore: add type hints",
+      "test: add concurrency tests",
+      "feat: implement cache warming",
+      "fix: resolve key collision issues",
+      "refactor: separate cache logic from storage",
+      "docs: add configuration guide",
+      "feat: add cache event listeners",
+      "fix: handle memory pressure",
+      "chore: optimize for Python 3.11",
+      "feat: add distributed cache support",
+      "refactor: improve cleanup logic",
+      "fix: resolve serialization issues",
+    ],
+  };
+
+  const defaultMessages = [
     "fix: resolve edge case in data processing",
     "feat: add input validation",
     "refactor: simplify helper functions",
@@ -49,7 +163,10 @@ export function generateCommitSchedule(
     const project = projects[i % projects.length];
     const fileKeys = Object.keys(project.files);
     const fileKey = fileKeys[Math.floor(Math.random() * fileKeys.length)] ?? "CHANGELOG.md";
-    const msg = messages[Math.floor(Math.random() * messages.length)];
+    
+    // Use project-specific messages for more realism
+    const projectMsgs = projectMessages[project.name] || defaultMessages;
+    const msg = projectMsgs[Math.floor(Math.random() * projectMsgs.length)];
 
     // For CHANGELOG-style commits, append a dev log entry
     const content =

@@ -1,11 +1,35 @@
 import { defaultModel, gatewayModel, generateText } from "@/lib/ai/client";
 import type { UserIntake } from "@/types/polish";
 
-const BIO_SYSTEM = `You are an expert at writing punchy, recruiter-optimized GitHub bios. Max 160 characters. No quotes. Include emojis sparingly. Focus on what they build and their goal.`;
+const BIO_SYSTEM = `You are an expert at writing premium, recruiter-optimized GitHub bios that impress hiring managers at top tech companies. Max 160 characters. No quotes. Use emojis strategically. Focus on: specific tech stack, current impact, and career trajectory. Make it memorable and professional.`;
 
 export async function generateBio(intake: UserIntake): Promise<string> {
   const { fullName, skills, goal, tone, location } = intake;
-  const prompt = `Write a GitHub bio for ${fullName}. Skills: ${skills.slice(0, 4).join(", ")}. Goal: ${goal}. Tone: ${tone}. Location: ${location ?? "not specified"}. Max 160 chars. Output only the bio text.`;
+  
+  const goalMapping: Record<string, string> = {
+    job: "Actively seeking software engineering roles",
+    opensource: "Open source contributor building impactful tools",
+    portfolio: "Full-stack developer shipping production code",
+    learning: "Software engineer passionate about clean code"
+  };
+  
+  const goalText = goalMapping[goal] || goalMapping.learning;
+  const topSkills = skills.slice(0, 4).join(" • ");
+  const locationText = location ? ` 📍 ${location}` : "";
+  
+  const prompt = `Write a premium GitHub bio for ${fullName}. 
+Top skills: ${topSkills}
+Career focus: ${goalText}
+Location: ${location || "Remote"}
+Tone: ${tone}
+
+Requirements:
+- Lead with strongest technical skill
+- Include current impact or what you're building
+- Add career trajectory (seeking, contributing, etc.)
+- Max 160 characters
+- Make it impressive to FAANG recruiters
+- Output ONLY the bio text, no quotes`;
 
   try {
     const response = await generateText({ model: defaultModel, system: BIO_SYSTEM, prompt });
@@ -17,9 +41,10 @@ export async function generateBio(intake: UserIntake): Promise<string> {
       return response.text.trim().slice(0, 160);
     } catch (err) {
       console.error("[v0] Bio gateway error:", err);
-      const goalText = goal === "job" ? "Open to opportunities" : goal === "opensource" ? "Open source contributor" : goal === "portfolio" ? "Building cool things" : "Always learning";
+      const goalText = goal === "job" ? "Seeking SWE roles" : goal === "opensource" ? "Open source maintainer" : goal === "portfolio" ? "Shipping production apps" : "Building scalable solutions";
       const loc = location ? ` 📍 ${location}` : "";
-      return `${skills.slice(0, 3).join(" • ")} developer${loc} | ${goalText}`.slice(0, 160);
+      const topSkill = skills[0] || "Full-stack";
+      return `${topSkill} developer • ${goalText}${loc}`.slice(0, 160);
     }
   }
 }

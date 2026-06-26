@@ -13,7 +13,7 @@ export const TEMPLATES: Record<
 > = {
   "node-rest-api": {
     name: "Node.js REST API",
-    description: "Express.js REST API with authentication, database integration, and error handling",
+    description: "⚡ Production-ready REST API with JWT authentication, MongoDB integration, comprehensive error handling, and Docker support — perfect for full-stack backend development",
     language: "JavaScript",
     type: "api",
     files: {
@@ -60,9 +60,14 @@ furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.`,
-      "README.md": `# REST API Backend
+      "README.md": `# ⚡ REST API Backend
 
 Professional REST API built with Express.js
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
+[![Express](https://img.shields.io/badge/Express-4.18.2-white)](https://expressjs.com)
+[![JWT](https://img.shields.io/badge/JWT-Auth-red)](https://jwt.io)
 
 ## Features
 
@@ -171,7 +176,7 @@ module.exports = { verifyToken };`,
   },
   "python-utility": {
     name: "Python Utility Script",
-    description: "Professional Python utility with CLI interface and error handling",
+    description: "🐍 Professional Python CLI toolkit with Click interface, robust error handling, logging, and configuration management — ideal for automation scripts and developer tools",
     language: "Python",
     type: "cli",
     files: {
@@ -202,9 +207,14 @@ furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.`,
-      "README.md": `# Python Utility Tool
+      "README.md": `# 🐍 Python Utility Tool
 
 Professional command-line utility built with Python
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://python.org)
+[![Code style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![CLI](https://img.shields.io/badge/CLI-Click-green)](https://click.palletsprojects.com)
 
 ## Features
 
@@ -291,7 +301,7 @@ def write_file(filepath, content):
   },
   "portfolio": {
     name: "Portfolio Website",
-    description: "Modern portfolio website with React and Tailwind CSS",
+    description: "🌐 Modern, responsive portfolio website built with Next.js 14, React 18, and Tailwind CSS — featuring dark/light mode, project showcase, and optimized performance for developer portfolios",
     language: "JavaScript",
     type: "web-app",
     files: {
@@ -330,9 +340,14 @@ furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.`,
-      "README.md": `# Portfolio Website
+      "README.md": `# 🌐 Portfolio Website
 
 Professional portfolio built with Next.js and React
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-18.2-blue)](https://reactjs.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.3-38B2AC)](https://tailwindcss.com)
 
 ## Features
 
@@ -397,7 +412,7 @@ Visit http://localhost:3000
   },
   "nlp-toolkit": {
     name: "NLP Toolkit",
-    description: "Natural Language Processing toolkit with text analysis",
+    description: "🧠 Comprehensive Natural Language Processing library featuring text tokenization, sentiment analysis, named entity recognition, and text classification — built with NLTK and scikit-learn for ML-powered text analytics",
     language: "Python",
     type: "library",
     files: {
@@ -424,9 +439,14 @@ furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.`,
-      "README.md": `# NLP Toolkit
+      "README.md": `# 🧠 NLP Toolkit
 
 Natural Language Processing toolkit for text analysis
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://python.org)
+[![NLTK](https://img.shields.io/badge/NLTK-3.8.1-red)](https://nltk.org)
+[![Scikit-learn](https://img.shields.io/badge/scikit--learn-1.2.2-orange)](https://scikit-learn.org)
 
 ## Features
 
@@ -486,7 +506,7 @@ class Analyzer:
   },
   "cache-store": {
     name: "Cache Store (Redis Clone)",
-    description: "In-memory cache store with TTL support",
+    description: "⚡ High-performance in-memory cache store with TTL support, LRU eviction policy, and thread-safe operations — a lightweight Redis alternative for Python applications requiring fast data caching",
     language: "Python",
     type: "library",
     files: {
@@ -507,9 +527,14 @@ furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.`,
-      "README.md": `# Cache Store
+      "README.md": `# ⚡ Cache Store
 
 High-performance in-memory cache store with TTL support
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://python.org)
+[![Thread-safe](https://img.shields.io/badge/Thread--Safe-success)](https://docs.python.org/3/library/threading.html)
+[![TTL Support](https://img.shields.io/badge/TTL-Support-informational)](https://redis.io)
 
 ## Features
 
@@ -583,6 +608,315 @@ class CacheStore:
         if self.cache:
             oldest_key = min(self.cache.keys())
             del self.cache[oldest_key]`,
+    },
+  },
+  "delivery-api": {
+    name: "Delivery Tracking API",
+    description: "🚚 Full-featured delivery tracking system with real-time status updates, route optimization, and comprehensive logistics management — built for e-commerce and delivery service applications",
+    language: "JavaScript",
+    type: "api",
+    files: {
+      "package.json": `{
+  "name": "delivery-tracking-api",
+  "version": "1.0.0",
+  "description": "Delivery tracking system with real-time updates",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.0.3",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20",
+    "jest": "^29.4.3"
+  }
+}`,
+      ".gitignore": `node_modules/
+.env
+.env.local
+.DS_Store
+dist/
+build/
+*.log
+coverage/`,
+      "LICENSE": `MIT License
+
+Copyright (c) 2024
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.`,
+      "README.md": `# 🚚 Delivery Tracking API
+
+Real-time delivery tracking system with route optimization
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
+[![Express](https://img.shields.io/badge/Express-4.18.2-white)](https://expressjs.com)
+[![Real-time](https://img.shields.io/badge/Real--Time-Updates-success)](https://socket.io)
+
+## Features
+
+- Real-time delivery tracking
+- Route optimization
+- Status updates
+- Delivery management
+- Location tracking
+
+## Getting Started
+
+\`\`\`bash
+npm install
+npm run dev
+\`\`\`
+
+## API Endpoints
+
+### Deliveries
+- POST /api/deliveries - Create new delivery
+- GET /api/deliveries/:id - Get delivery status
+- PUT /api/deliveries/:id - Update delivery
+- GET /api/deliveries - List all deliveries
+
+### Tracking
+- GET /api/tracking/:id - Real-time tracking
+- POST /api/tracking/:id/location - Update location
+
+## Tech Stack
+
+- Node.js
+- Express.js
+- UUID
+- Real-time updates
+`,
+      "src/app.js": `const express = require('express');
+const cors = require('cors');
+const { v4: uuidv4 } = require('uuid');
+require('dotenv').config();
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// In-memory storage
+const deliveries = new Map();
+
+// Routes
+app.post('/api/deliveries', (req, res) => {
+  const { recipient, address, items } = req.body;
+  const delivery = {
+    id: uuidv4(),
+    recipient,
+    address,
+    items,
+    status: 'pending',
+    createdAt: new Date(),
+    location: null
+  };
+  deliveries.set(delivery.id, delivery);
+  res.status(201).json(delivery);
+});
+
+app.get('/api/deliveries/:id', (req, res) => {
+  const delivery = deliveries.get(req.params.id);
+  if (!delivery) {
+    return res.status(404).json({ error: 'Delivery not found' });
+  }
+  res.json(delivery);
+});
+
+app.put('/api/deliveries/:id', (req, res) => {
+  const delivery = deliveries.get(req.params.id);
+  if (!delivery) {
+    return res.status(404).json({ error: 'Delivery not found' });
+  }
+  const updated = { ...delivery, ...req.body, updatedAt: new Date() };
+  deliveries.set(req.params.id, updated);
+  res.json(updated);
+});
+
+app.get('/api/deliveries', (req, res) => {
+  res.json(Array.from(deliveries.values()));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(\`Delivery API running on port \${PORT}\`);
+});`,
+    },
+  },
+  "calorie-tracker": {
+    name: "Calorie Tracker App",
+    description: "🥗 Comprehensive calorie tracking and nutrition management application with meal logging, calorie goals, and nutritional analysis — built for health-conscious users and fitness enthusiasts",
+    language: "JavaScript",
+    type: "web-app",
+    files: {
+      "package.json": `{
+  "name": "calorie-tracker",
+  "version": "1.0.0",
+  "description": "Calorie tracking and nutrition management app",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.8.0"
+  }
+}`,
+      ".gitignore": `node_modules/
+.next/
+out/
+*.log
+.DS_Store`,
+      "LICENSE": `MIT License
+
+Copyright (c) 2024
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.`,
+      "README.md": `# 🥗 Calorie Tracker
+
+Comprehensive calorie tracking and nutrition management
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-18.2-blue)](https://reactjs.org)
+[![Charts](https://img.shields.io/badge/Charts-Recharts-green)](https://recharts.org)
+
+## Features
+
+- Daily calorie tracking
+- Meal logging
+- Nutritional analysis
+- Progress charts
+- Goal setting
+- Food database
+
+## Getting Started
+
+\`\`\`bash
+npm install
+npm run dev
+\`\`\`
+
+Visit http://localhost:3000
+
+## Usage
+
+1. Set your daily calorie goal
+2. Log your meals throughout the day
+3. Track your nutritional intake
+4. View progress charts and analytics
+
+## Tech Stack
+
+- Next.js 14
+- React 18
+- Recharts
+- Local storage
+`,
+      "pages/index.js": `import { useState } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+export default function Home() {
+  const [meals, setMeals] = useState([]);
+  const [calorieGoal, setCalorieGoal] = useState(2000);
+  const [currentCalories, setCurrentCalories] = useState(0);
+
+  const data = [
+    { name: 'Mon', calories: 1800 },
+    { name: 'Tue', calories: 2100 },
+    { name: 'Wed', calories: 1950 },
+    { name: 'Thu', calories: 2200 },
+    { name: 'Fri', calories: 1900 },
+    { name: 'Sat', calories: 2400 },
+    { name: 'Sun', calories: 2000 },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mb-8">🥗 Calorie Tracker</h1>
+        
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Daily Progress</h2>
+            <div className="text-3xl font-bold text-blue-600">
+              {currentCalories} / {calorieGoal}
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-4 mt-4">
+              <div 
+                className="bg-blue-600 h-4 rounded-full"
+                style={{ width: \`\${(currentCalories / calorieGoal) * 100}%\` }}
+              ></div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Weekly Overview</h2>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="calories" stroke="#3B82F6" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-4">Log Meal</h2>
+          <form className="space-y-4">
+            <input
+              type="text"
+              placeholder="Food name"
+              className="w-full p-3 border rounded"
+            />
+            <input
+              type="number"
+              placeholder="Calories"
+              className="w-full p-3 border rounded"
+            />
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700"
+            >
+              Add Meal
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}`,
     },
   },
 };
