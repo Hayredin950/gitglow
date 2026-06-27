@@ -2,22 +2,15 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-// Optional: Add a secret to protect this endpoint if needed
-// const SECRET = process.env.UPDATE_SHARE_TOKENS_SECRET;
-
 export async function POST() {
-  // Optional: Uncomment this to add protection
-  // const authHeader = request.headers.get("authorization");
-  // if (!authHeader || authHeader !== `Bearer ${SECRET}`) {
-  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  // }
-
   try {
     const polishesWithoutToken = await db.polish.findMany({
       where: { shareToken: null }
     });
 
-    console.log(`Found ${polishesWithoutToken.length} polishes without shareTokens`);
+    console.log(`[v0] Found ${polishesWithoutToken.length} polishes without shareTokens`);
+
+    const updatedPolishes: string[] = [];
 
     for (const polish of polishesWithoutToken) {
       const shareToken = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
@@ -25,15 +18,18 @@ export async function POST() {
         where: { id: polish.id },
         data: { shareToken }
       });
+      updatedPolishes.push(`Polish ${polish.id} → ${shareToken}`);
+      console.log(`[v0] Updated polish ${polish.id} with shareToken: ${shareToken}`);
     }
 
     return NextResponse.json({
       success: true,
       updated: polishesWithoutToken.length,
+      updatedPolishes,
       message: `Successfully updated ${polishesWithoutToken.length} polishes with shareTokens!`
     });
   } catch (error) {
-    console.error("Error updating share tokens:", error);
-    return NextResponse.json({ error: "Failed to update share tokens" }, { status: 500 });
+    console.error("[v0] Error updating share tokens:", error);
+    return NextResponse.json({ error: "Failed to update share tokens", details: String(error) }, { status: 500 });
   }
 }
