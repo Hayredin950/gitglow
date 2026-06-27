@@ -347,8 +347,11 @@ export async function POST(req: Request) {
           } catch (repoErr) {
             const errorMsg = repoErr instanceof Error ? repoErr.message : "Unknown error";
             const stack = repoErr instanceof Error ? repoErr.stack : "";
-            console.error(`[v0] Failed to push to ${repoName}:`, repoErr);
+            const fullErr = JSON.stringify(repoErr, null, 2);
+            console.error(`[v0] Failed to push to ${repoName}!`);
+            console.error(`[v0] Error message:`, errorMsg);
             console.error(`[v0] Stack trace:`, stack);
+            console.error(`[v0] Full error:`, fullErr);
             emit("commits", `⚠️ Failed to push to ${repoName}: ${errorMsg}`, 4, total);
             failed += repoCommits.length;
           }
