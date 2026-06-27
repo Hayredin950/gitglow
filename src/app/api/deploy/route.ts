@@ -65,7 +65,7 @@ export async function POST(req: Request) {
         if (dreamRepos && dreamRepos.length > 0) {
           total += dreamRepos.length;
         }
-        if (earnBadges) total += 20; // 20 PRs for badges
+        if (earnBadges) total += 15; // 15 PRs for badges
 
         // Validate token scopes before starting
         emit("validate", "Validating GitHub token permissions...", 0, total);
@@ -359,17 +359,17 @@ export async function POST(req: Request) {
             await new Promise((r) => setTimeout(r, 1000)); // Shorter delay
 
             // Initialize repo with README
-            await pushFile(token, owner, tempRepoName, "README.md", "# GitGlow Badge Helper\n\nThis repo helps earn GitHub achievement badges!\n\n## Badges Being Earned\n- **YOLO**: Merged PRs without review\n- **Pull Shark**: Created 20+ PRs for Lv1\n- **Quickdraw**: Merged PRs quickly after creation\n", "feat: initialize badge helper", "main", committer, undefined);
+            await pushFile(token, owner, tempRepoName, "README.md", "# GitGlow Badge Helper\n\nThis repo helps earn GitHub achievement badges!\n\n## Badges Being Earned\n- **YOLO**: Merged PRs without review\n- **Pull Shark**: Created 15+ PRs for Lv1\n- **Quickdraw**: Merged PRs quickly after creation\n", "feat: initialize badge helper", "main", committer, undefined);
             await new Promise((r) => setTimeout(r, 800)); // Shorter
 
-            // Create 20 PRs and merge them immediately for badges
-            for (let i = 1; i <= 20; i++) {
+            // Create 15 PRs and merge them immediately for badges
+            for (let i = 1; i <= 15; i++) {
               const branchName = `gitglow-badge-${i}`;
-              const badgeContent = `# GitGlow Badge Automation PR #${i}\n\nThis PR helps earn GitHub achievement badges!\n\n## Badges Being Earned\n- **YOLO**: Merged without review\n- **Pull Shark**: Part of 20+ PRs for Lv1\n- **Quickdraw**: Merged quickly\n\nPR Number: ${i}\nCreated: ${new Date().toISOString()}\n`;
+              const badgeContent = `# GitGlow Badge Automation PR #${i}\n\nThis PR helps earn GitHub achievement badges!\n\n## Badges Being Earned\n- **YOLO**: Merged without review\n- **Pull Shark**: Part of 15+ PRs for Lv1\n- **Quickdraw**: Merged quickly\n\nPR Number: ${i}\nCreated: ${new Date().toISOString()}\n`;
               
               // Create branch
               await createBranch(token, owner, tempRepoName, branchName, "main");
-              emit("badges", `Created branch ${branchName} (${i}/20)...`, 5, total);
+              emit("badges", `Created branch ${branchName} (${i}/15)...`, 5, total);
               await new Promise((r) => setTimeout(r, 400)); // Much shorter
               
               // Add file to branch with unique name
@@ -386,12 +386,12 @@ export async function POST(req: Request) {
                 branchName, 
                 "main"
               );
-              emit("badges", `Created PR #${pr.number} (${i}/20)...`, 5, total);
+              emit("badges", `Created PR #${pr.number} (${i}/15)...`, 5, total);
               await new Promise((r) => setTimeout(r, 600)); 
               
               // Merge PR immediately
               await mergePullRequest(token, owner, tempRepoName, pr.number);
-              emit("badges", `Merged PR #${pr.number} (${i}/20)...`, 5, total);
+              emit("badges", `Merged PR #${pr.number} (${i}/15)...`, 5, total);
               
               // Delete branch
               await deleteBranch(token, owner, tempRepoName, branchName);
