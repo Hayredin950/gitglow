@@ -280,11 +280,13 @@ export async function POST(req: Request) {
             const dates = generateCommitDates(new Date(), commitsPerRepo);
             
             commits.forEach((commit, j) => {
+              // Create unique file path per commit to avoid overwrites!
+              const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
               commitPlanToUse.push({
                 repo: repoName,
                 date: dates[j].toISOString(),
-                path: `.gitkeep-${j}`,
-                content: `# Commit ${j + 1}\n\nGenerated contribution commit for ${templateId}.`,
+                path: `gitglow_contributions/commit_${j}_${uniqueId}.md`,
+                content: `# GitGlow Contribution Commit #${j + 1}\n\nTemplate: ${templateId}\nDate: ${dates[j].toISOString()}\n\nThis is an automated contribution commit from GitGlow to enhance your GitHub profile!`,
                 message: commit.message,
                 author: committer, // Ensure proper authorship
               });

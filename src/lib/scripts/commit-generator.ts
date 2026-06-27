@@ -195,6 +195,7 @@ export function generateCommitDates(baseDate: Date, count: number): Date[] {
 
   // Calculate distribution across 2-3 years (730-1095 days) - more realistic
   const totalDays = Math.floor(Math.random() * 365) + 730; // Between 2 and 3 years
+  console.log(`[v0] Generating ${count} commits over ${totalDays} days (${Math.round(totalDays/365)} years)`);
   
   // Ensure we spread commits across different months and years
   const targetDays = Math.max(Math.floor(count / 2), Math.min(count, 200)); // More days for longer range
@@ -288,6 +289,7 @@ export function generateCommitDates(baseDate: Date, count: number): Date[] {
     dates.push(newDate);
   }
 
+  console.log(`[v0] Generated dates from ${dates[0].toISOString()} to ${dates[dates.length-1].toISOString()}`);
   // Sort the dates in chronological order
   return dates.sort((a, b) => a.getTime() - b.getTime());
 }
