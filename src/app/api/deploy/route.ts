@@ -70,10 +70,11 @@ export async function POST(req: Request) {
         // Validate token scopes before starting
         emit("validate", "Validating GitHub token permissions...", 0, total);
         const scopeInfo = await validateTokenScopes(token);
+        console.log(`[v0] GitHub token scopes:`, scopeInfo);
         const { isValid, warnings } = checkScopesForDeploy(scopeInfo);
 
         if (!isValid) {
-          throw new Error(`GitHub token missing required scopes for deployment`);
+          throw new Error(`GitHub token missing required scopes for deployment: ${JSON.stringify(scopeInfo)}`);
         }
 
         for (const warning of warnings) {
