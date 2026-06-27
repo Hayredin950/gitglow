@@ -193,20 +193,21 @@ export function generateCommitDates(baseDate: Date, count: number): Date[] {
   const now = baseDate;
   const usedDateKeys = new Map<string, number>(); // Track date -> commit count
 
-  // Calculate distribution across 1 year (365 days) - more realistic
-  const totalDays = 365;
+  // Calculate distribution across 2-3 years (730-1095 days) - more realistic
+  const totalDays = Math.floor(Math.random() * 365) + 730; // Between 2 and 3 years
   
-  // Ensure we spread commits across different months
-  const targetDays = Math.max(Math.floor(count / 2), Math.min(count, 100)); // At least 1 commit every other day on average
+  // Ensure we spread commits across different months and years
+  const targetDays = Math.max(Math.floor(count / 2), Math.min(count, 200)); // More days for longer range
   
   // Generate days with better distribution
   const selectedDays = new Set<number>();
   
-  // First, ensure we have commits in different months
+  // First, ensure we have commits in different months and years
   const months = new Set<number>();
+  const years = new Set<number>();
   let attempts = 0;
   
-  while (selectedDays.size < targetDays && attempts < 10000) {
+  while (selectedDays.size < targetDays && attempts < 20000) {
     const daysAgo = Math.floor(Math.random() * totalDays);
     const candidateDate = new Date(now);
     candidateDate.setDate(candidateDate.getDate() - daysAgo);
@@ -222,16 +223,29 @@ export function generateCommitDates(baseDate: Date, count: number): Date[] {
     
     selectedDays.add(daysAgo);
     months.add(candidateDate.getMonth());
+    years.add(candidateDate.getFullYear());
     attempts++;
   }
   
-  // If we don't have enough months, add some more
-  while (months.size < 6 && selectedDays.size < targetDays) {
+  // If we don't have enough months or years, add some more
+  while (months.size < 12 && selectedDays.size < targetDays) {
     const randomMonth = Math.floor(Math.random() * 12);
-    const daysAgo = Math.floor(Math.random() * 30) + (randomMonth * 30);
+    const daysAgo = Math.floor(Math.random() * 30) + (randomMonth * 30) + (Math.floor(Math.random() * 2) * 365); // Add random year
     if (daysAgo < totalDays) {
       selectedDays.add(daysAgo);
       months.add(randomMonth);
+      const d = new Date(now);
+      d.setDate(d.getDate() - daysAgo);
+      years.add(d.getFullYear());
+    }
+  }
+  while (years.size < 2 && selectedDays.size < targetDays) {
+    const daysAgo = Math.floor(Math.random() * 365) + 365; // At least 1 year ago
+    if (daysAgo < totalDays) {
+      selectedDays.add(daysAgo);
+      const d = new Date(now);
+      d.setDate(d.getDate() - daysAgo);
+      years.add(d.getFullYear());
     }
   }
   

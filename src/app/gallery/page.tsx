@@ -130,11 +130,14 @@ export default async function GalleryPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {polishes.map((polish: PolishWithUser) => (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-24">
+            {polishes.map((polish: PolishWithUser) => {
+              // Ensure we always use shareToken if available
+              const linkId = polish.shareToken || polish.id;
+              return (
               <Link 
                 key={polish.id} 
-                href={`/p/${polish.shareToken ?? polish.id}`} 
+                href={`/p/${linkId}`} 
                 className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-900/90 to-zinc-950/90 backdrop-blur-2xl border border-zinc-800/50 p-5 hover:border-blue-500/30 transition-all duration-500 hover:shadow-xl hover:shadow-blue-500/20 hover:-translate-y-1"
               >
                 {/* Premium glow effect on hover */}
@@ -222,7 +225,7 @@ export default async function GalleryPage() {
                   </div>
                 </div>
               </Link>
-            ))}
+            );})}
           </div>
         )}
       </div>
