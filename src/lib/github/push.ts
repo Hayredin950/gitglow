@@ -6,8 +6,18 @@ import os from "os";
 
 // Helper to run shell commands
 function runCommand(cmd: string, cwd: string) {
-  console.log(`[v0] RUN: ${cmd} (in ${cwd})`);
-  return execSync(cmd, { cwd, encoding: "utf8", stdio: "pipe" });
+  try {
+    console.log(`[v0] RUN: ${cmd} (in ${cwd})`);
+    const result = execSync(cmd, { cwd, encoding: "utf8", stdio: "pipe" });
+    console.log(`[v0] SUCCESS:`, result);
+    return result;
+  } catch (error) {
+    console.error(`[v0] ERROR RUNNING: ${cmd}`, error);
+    const err = error as any; // Type guard
+    if (err.stdout) console.error(`[v0] STDOUT:`, err.stdout);
+    if (err.stderr) console.error(`[v0] STDERR:`, err.stderr);
+    throw error;
+  }
 }
 
 // New: Push commits using local git repo (more reliable for backdating)
@@ -40,6 +50,7 @@ export async function pushCommitsWithLocalGit(
     const firstCommit = commits[0];
     const gitUserName = firstCommit?.authorName || owner;
     const gitUserEmail = firstCommit?.authorEmail || `${owner}@users.noreply.github.com`;
+    console.log(`[v0] Setting git config user.name="${gitUserName}", user.email="${gitUserEmail}"`);
     runCommand(`git config user.name "${gitUserName}"`, tempDir);
     runCommand(`git config user.email "${gitUserEmail}"`, tempDir);
 
@@ -69,19 +80,23 @@ export async function pushCommitsWithLocalGit(
       // Stage
       runCommand(`git add "${commit.path}"`, tempDir);
 
-      // Commit with date
-      const commitEnv = {
-        ...process.env,
-        GIT_AUTHOR_DATE: commit.date,
-        GIT_COMMITTER_DATE: commit.date
-      };
-      
-      execSync(`git commit -m "${commit.message.replace(/"/g, '\\"')}"`, {
-        cwd: tempDir,
-        env: commitEnv,
-        encoding: "utf8",
-        stdio: "pipe"
-      });
+      // Commit with date and committer info
+              const commitEnv = {
+                ...process.env,
+                GIT_AUTHOR_NAME: firstCommit?.authorName || owner,
+                GIT_AUTHOR_EMAIL: firstCommit?.authorEmail || `${owner}@users.noreply.github.com`,
+                GIT_AUTHOR_DATE: commit.date,
+                GIT_COMMITTER_NAME: firstCommit?.authorName || owner,
+                GIT_COMMITTER_EMAIL: firstCommit?.authorEmail || `${owner}@users.noreply.github.com`,
+                GIT_COMMITTER_DATE: commit.date
+              };
+              
+              execSync(`git commit -m "${commit.message.replace(/"/g, '\\"')}"`, {
+                cwd: tempDir,
+                env: commitEnv,
+                encoding: "utf8",
+                stdio: "pipe"
+              });
       
       // Emit progress if we have emit
       if (emit && totalSteps) {
@@ -98,8 +113,16 @@ export async function pushCommitsWithLocalGit(
     runCommand(`git branch -M ${branch}`, tempDir);
     
     console.log(`[v0] Running git push -u origin ${branch} --force`);
-    const pushOutput = runCommand(`git push -u origin ${branch} --force`, tempDir);
-    console.log(`[v0] Push successful:`, pushOutput);
+    try {
+      const pushOutput = runCommand(`git push -u origin ${branch} --force`, tempDir);
+      console.log(`[v0] Push successful:`, pushOutput);
+    } catch (pushError) {
+      const err = pushError as any;
+      console.error(`[v0] Git push FAILED for repo ${repo}:`, err);
+      if (err.stderr) console.error(`[v0] Stderr:`, err.stderr);
+      if (err.stdout) console.error(`[v0] Stdout:`, err.stdout);
+      throw pushError;
+    }
 
     console.log(`[v0] Successfully pushed ${commits.length} commits to ${owner}/${repo}`);
     return commits.length;
