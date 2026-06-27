@@ -325,8 +325,8 @@ export async function POST(req: Request) {
               repoName,
               sortedCommits.map(commit => ({
                 ...commit,
-                authorName: committer.name,
-                authorEmail: committer.email
+                authorName: committer?.name ?? owner,
+                authorEmail: committer?.email ?? `${owner}@users.noreply.github.com`
               })),
               "main"
             );
