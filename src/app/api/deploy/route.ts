@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { createRepo, pushFile, updateProfile, setRepoTopics, repoExists, createBranch, createPullRequest, mergePullRequest, deleteBranch, deleteRepo, enableBranchProtection, pushCommitsWithLocalGit } from "@/lib/github/push";
+import { createRepo, pushFile, updateProfile, setRepoTopics, repoExists, createBranch, createPullRequest, mergePullRequest, deleteBranch, deleteRepo, enableBranchProtection } from "@/lib/github/push";
 import { validateTokenScopes, checkScopesForDeploy } from "@/lib/github/validate";
 import type { GeneratedProject, CommitPlan } from "@/types/polish";
 import { generateExecutionScript, generateSummary } from "@/lib/scripts/orchestrator";
@@ -60,21 +60,20 @@ export async function POST(req: Request) {
         // Calculate total steps based on approach
         let total = 5;
         if (scriptBased && selectedTemplates) {
-          total = 5 + selectedTemplates.length + 150; // Additional steps for each template and 150 commits
+          total = 5 + selectedTemplates.length; // Additional steps for each template
         }
         if (dreamRepos && dreamRepos.length > 0) {
           total += dreamRepos.length;
         }
-        if (earnBadges) total += 15; // 15 PRs for badges
+        if (earnBadges) total += 1;
 
         // Validate token scopes before starting
         emit("validate", "Validating GitHub token permissions...", 0, total);
         const scopeInfo = await validateTokenScopes(token);
-        console.log(`[v0] GitHub token scopes:`, scopeInfo);
         const { isValid, warnings } = checkScopesForDeploy(scopeInfo);
 
         if (!isValid) {
-          throw new Error(`GitHub token missing required scopes for deployment: ${JSON.stringify(scopeInfo)}`);
+          throw new Error(`GitHub token missing required scopes for deployment`);
         }
 
         for (const warning of warnings) {
@@ -296,64 +295,32 @@ export async function POST(req: Request) {
         }
         
         emit("commits", `Pushing ${commitPlanToUse.length} contribution commits...`, 4, total);
-        const maxCommitsToPush = scriptBased ? 150 : 100; // Allow up to 150 commits for script-based
         let pushed = 0;
         let failed = 0;
-
-        // Group commits by repo for local git approach
-        const commitsByRepo = new Map<string, Array<{path: string, content: string, message: string, date: string}>>();
+        const maxCommitsToPush = scriptBased ? 150 : 100; // Allow up to 150 commits for script-based (reduced from 400)
         for (const commit of commitPlanToUse.slice(0, maxCommitsToPush)) {
-          if (!commitsByRepo.has(commit.repo)) commitsByRepo.set(commit.repo, []);
-          commitsByRepo.get(commit.repo)!.push({
-            path: commit.path,
-            content: commit.content,
-            message: commit.message,
-            date: commit.date
-          });
-        }
-
-        console.log(`[v0] Committer info:`, committer);
-        console.log(`[v0] Repos to push:`, Array.from(commitsByRepo.keys()));
-
-        // For each repo, use local git to push commits
-        let repoIndex = 0;
-        const totalRepos = commitsByRepo.size;
-        for (const [repoName, repoCommits] of commitsByRepo.entries()) {
-          repoIndex++;
-          emit("commits", `Pushing to ${repoName} (${repoIndex}/${totalRepos})...`, 4, total);
           try {
-            // Sort commits in chronological order (oldest first)
-            const sortedCommits = [...repoCommits].sort((a, b) => 
-              new Date(a.date).getTime() - new Date(b.date).getTime()
-            );
-
-            console.log(`[v0] Starting push to ${repoName} with ${sortedCommits.length} commits`);
-            await pushCommitsWithLocalGit(
+            await pushFile(
               token,
               owner,
-              repoName,
-              sortedCommits.map(commit => ({
-                ...commit,
-                authorName: committer?.name ?? owner,
-                authorEmail: committer?.email ?? `${owner}@users.noreply.github.com`
-              })),
+              commit.repo,
+              commit.path,
+              commit.content,
+              commit.message,
               "main",
-              emit,
-              total
+              commit.author || committer, // Use commit-specific author if available
+              commit.date // Pass the date for proper commit distribution
             );
-            
-            pushed += repoCommits.length;
-            emit("commits", `${pushed}/${Math.min(maxCommitsToPush, commitPlanToUse.length)} commits pushed...`, 4, total);
-          } catch (repoErr) {
-            const errorMsg = repoErr instanceof Error ? repoErr.message : "Unknown error";
-            const stack = repoErr instanceof Error ? repoErr.stack : "";
-            const fullErr = JSON.stringify(repoErr, null, 2);
-            console.error(`[v0] Failed to push to ${repoName}!`);
-            console.error(`[v0] Error message:`, errorMsg);
-            console.error(`[v0] Stack trace:`, stack);
-            console.error(`[v0] Full error:`, fullErr);
-            emit("commits", `⚠️ Failed to push to ${repoName}: ${errorMsg}`, 4, total);
-            failed += repoCommits.length;
+            pushed++;
+            if (pushed % 10 === 0) {
+              emit("commits", `${pushed}/${Math.min(maxCommitsToPush, commitPlanToUse.length)} commits pushed...`, 4, total);
+            }
+            await new Promise((r) => setTimeout(r, 200));
+          } catch (commitErr) {
+            failed++;
+            const msg = commitErr instanceof Error ? commitErr.message : "Unknown error";
+            console.warn(`[v0] Commit ${pushed + failed} failed: ${msg}`);
+            // Continue with next commit even if one fails
           }
         }
         if (failed > 0) {
@@ -366,30 +333,26 @@ export async function POST(req: Request) {
           emit("badges", "Earning GitHub achievement badges (YOLO, Pull Shark, Quickdraw)...", 5, total);
           try {
             const tempRepoName = `gitglow-badge-helper-${Date.now()}`;
-            console.log(`[v0] Creating temp repo: ${tempRepoName}`);
             await createRepo(token, tempRepoName, "GitGlow Badge Helper", false);
-            await new Promise((r) => setTimeout(r, 2000)); // Wait a bit more for GitHub to process repo
+            await new Promise((r) => setTimeout(r, 3000)); // Wait a bit for repo to be ready
 
-            // Initialize repo with README AND push initial commit to main
-            console.log(`[v0] Pushing initial README to temp repo`);
-            await pushFile(token, owner, tempRepoName, "README.md", "# GitGlow Badge Helper\n\nThis repo helps earn GitHub achievement badges!\n\n## Badges Being Earned\n- **YOLO**: Merged PRs without review\n- **Pull Shark**: Created 15+ PRs for Lv1\n- **Quickdraw**: Merged PRs quickly after creation\n", "feat: initialize badge helper", "main", committer, undefined);
-            console.log(`[v0] Initial README pushed successfully!`);
-            await new Promise((r) => setTimeout(r, 1000));
+            // Initialize repo with README
+            await pushFile(token, owner, tempRepoName, "README.md", "# GitGlow Badge Helper\n\nThis repo helps earn GitHub achievement badges!\n\n## Badges Being Earned\n- **YOLO**: Merged PRs without review\n- **Pull Shark**: Created 20+ PRs for Lv1\n- **Quickdraw**: Merged PRs quickly after creation\n", "feat: initialize badge helper", "main", committer, undefined);
+            await new Promise((r) => setTimeout(r, 2000));
 
-            // Create 15 PRs and merge them immediately for badges
-            for (let i = 1; i <= 15; i++) {
-              console.log(`[v0] Starting PR ${i}/15`);
+            // Create 20 PRs and merge them immediately for badges (Pull Shark Lv1 needs 16, we do 20 to be safe!)
+            for (let i = 1; i <= 20; i++) {
               const branchName = `gitglow-badge-${i}`;
-              const badgeContent = `# GitGlow Badge Automation PR #${i}\n\nThis PR helps earn GitHub achievement badges!\n\n## Badges Being Earned\n- **YOLO**: Merged without review\n- **Pull Shark**: Part of 15+ PRs for Lv1\n- **Quickdraw**: Merged quickly\n\nPR Number: ${i}\nCreated: ${new Date().toISOString()}\n`;
+              const badgeContent = `# GitGlow Badge Automation PR #${i}\n\nThis PR helps earn GitHub achievement badges!\n\n## Badges Being Earned\n- **YOLO**: Merged without review\n- **Pull Shark**: Part of 20+ PRs for Lv1\n- **Quickdraw**: Merged quickly\n\nPR Number: ${i}\nCreated: ${new Date().toISOString()}\n`;
               
               // Create branch
               await createBranch(token, owner, tempRepoName, branchName, "main");
-              emit("badges", `Created branch ${branchName} (${i}/15)...`, 5, total);
-              await new Promise((r) => setTimeout(r, 500)); 
+              emit("badges", `Created branch ${branchName} (${i}/20)...`, 5, total);
+              await new Promise((r) => setTimeout(r, 1000));
               
-              // Add file to branch with unique name
+              // Add file to branch with unique name to avoid issues
               await pushFile(token, owner, tempRepoName, `gitglow_pr_${i}_${Date.now()}.md`, badgeContent, `feat: gitglow badge PR #${i}`, branchName, committer, undefined);
-              await new Promise((r) => setTimeout(r, 500)); 
+              await new Promise((r) => setTimeout(r, 1500));
               
               // Create PR
               const pr = await createPullRequest(
@@ -401,24 +364,25 @@ export async function POST(req: Request) {
                 branchName, 
                 "main"
               );
-              emit("badges", `Created PR #${pr.number} (${i}/15)...`, 5, total);
-              await new Promise((r) => setTimeout(r, 700)); 
+              emit("badges", `Created PR #${pr.number} (${i}/20)...`, 5, total);
+              await new Promise((r) => setTimeout(r, 2000));
               
-              // Merge PR immediately
+              // Merge PR immediately for YOLO and Quickdraw badges (without review!)
               await mergePullRequest(token, owner, tempRepoName, pr.number);
-              emit("badges", `Merged PR #${pr.number} (${i}/15)...`, 5, total);
+              emit("badges", `Merged PR #${pr.number} - YOLO/Quickdraw triggered! (${i}/20)...`, 5, total);
               
-              // Delete branch
+              // Delete branch after merge
               await deleteBranch(token, owner, tempRepoName, branchName);
               
-              await new Promise((r) => setTimeout(r, 300)); 
+              await new Promise((r) => setTimeout(r, 1500));
             }
             
-            // DON'T delete temp repo
-            emit("badges", `✅ Badge automation complete! Keep repo: https://github.com/${owner}/${tempRepoName}`, 5, total);
+            // DON'T delete the temp repo - GitHub needs it to process the PRs for badges! Keep it forever!
+            emit("badges", `✅ Badge automation complete! Created and merged 20 PRs! Keep repo: https://github.com/${owner}/${tempRepoName}`, 5, total);
           } catch (badgeErr) {
-            console.error("[v0] Badge automation failed:", badgeErr);
-            emit("badges", `⚠️ Badge automation issue: ${badgeErr instanceof Error ? badgeErr.message : "Unknown error"}`, 5, total);
+            const msg = badgeErr instanceof Error ? badgeErr.message : "Unknown error";
+            console.warn("[v0] Badge automation failed:", badgeErr);
+            emit("badges", `⚠️ Badge automation had an issue: ${msg}. Try manual PRs if needed.`, 5, total);
           }
         }
 

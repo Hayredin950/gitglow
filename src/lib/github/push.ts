@@ -1,156 +1,4 @@
 import { createOctokit } from "./client";
-import { execSync } from "child_process";
-import fs from "fs";
-import path from "path";
-import os from "os";
-
-// Helper to run shell commands
-function runCommand(cmd: string, cwd: string) {
-  try {
-    console.log(`[v0] RUN: ${cmd} (in ${cwd})`);
-    const result = execSync(cmd, { cwd, encoding: "utf8", stdio: "pipe" });
-    console.log(`[v0] SUCCESS:`, result);
-    return result;
-  } catch (error) {
-    console.error(`[v0] ERROR RUNNING: ${cmd}`, error);
-    const err = error as any; // Type guard
-    if (err.stdout) console.error(`[v0] STDOUT:`, err.stdout);
-    if (err.stderr) console.error(`[v0] STDERR:`, err.stderr);
-    throw error;
-  }
-}
-
-// New: Push commits using local git repo (more reliable for backdating)
-export async function pushCommitsWithLocalGit(
-  token: string,
-  owner: string,
-  repo: string,
-  commits: Array<{
-    path: string;
-    content: string;
-    message: string;
-    authorName: string;
-    authorEmail: string;
-    date: string; // ISO date string
-  }>,
-  branch: string = "main",
-  emit?: (step: string, detail: string, progress: number, total: number) => void,
-  totalSteps?: number
-): Promise<number> {
-  const tempDir = path.join(os.tmpdir(), `gitglow-${repo}-${Date.now()}`);
-  console.log(`[v0] Using temp dir: ${tempDir}`);
-  console.log(`[v0] os.tmpdir() is: ${os.tmpdir()}`);
-  
-  try {
-    // Cleanup if already exists
-    try { fs.rmSync(tempDir, { recursive: true, force: true }); } catch (e) {}
-    
-    // Initialize repo
-    console.log(`[v0] git init`);
-    runCommand("git init", tempDir);
-    
-    const firstCommit = commits[0];
-    const gitUserName = firstCommit?.authorName || owner;
-    const gitUserEmail = firstCommit?.authorEmail || `${owner}@users.noreply.github.com`;
-    console.log(`[v0] Setting git config user.name="${gitUserName}", user.email="${gitUserEmail}"`);
-    runCommand(`git config user.name "${gitUserName}"`, tempDir);
-    runCommand(`git config user.email "${gitUserEmail}"`, tempDir);
-    console.log(`[v0] Git config list:`, runCommand("git config --list", tempDir));
-
-    // Calculate and emit date range
-    if (commits.length > 0) {
-      const sortedDates = [...commits].map(c => new Date(c.date)).sort((a,b) => a.getTime()-b.getTime());
-      const startDate = sortedDates[0];
-      const endDate = sortedDates[sortedDates.length - 1];
-      const dateRangeStr = `${startDate.getFullYear()}-${String(startDate.getMonth()+1).padStart(2,'0')}-${String(startDate.getDate()).padStart(2,'0')} → ${endDate.getFullYear()}-${String(endDate.getMonth()+1).padStart(2,'0')}-${String(endDate.getDate()).padStart(2,'0')}`;
-      console.log(`[v0] Commit date range: ${dateRangeStr}`);
-      if (emit && totalSteps) {
-        emit("commits", `Date range: ${dateRangeStr}`, 0, totalSteps);
-      }
-    }
-
-    // Create each commit
-    console.log(`[v0] Starting to create ${commits.length} commits locally`);
-    for (let i = 0; i < commits.length; i++) {
-      const commit = commits[i];
-      console.log(`[v0] Processing commit ${i + 1}/${commits.length}`);
-      const filePath = path.join(tempDir, commit.path);
-      const dirPath = path.dirname(filePath);
-      
-      // Create directory if needed
-      console.log(`[v0] Creating directory ${dirPath}`);
-      try { fs.mkdirSync(dirPath, { recursive: true }); } catch (e) {
-        console.log(`[v0] Directory creation failed, continuing`, e);
-      }
-      
-      console.log(`[v0] Writing file ${filePath}`);
-      fs.writeFileSync(filePath, commit.content, "utf-8");
-
-      // Stage
-      console.log(`[v0] git add ${commit.path}`);
-      runCommand(`git add "${commit.path}"`, tempDir);
-
-      // Commit with date and committer info
-      const commitEnv = {
-        ...process.env,
-        GIT_AUTHOR_NAME: firstCommit?.authorName || owner,
-        GIT_AUTHOR_EMAIL: firstCommit?.authorEmail || `${owner}@users.noreply.github.com`,
-        GIT_AUTHOR_DATE: commit.date,
-        GIT_COMMITTER_NAME: firstCommit?.authorName || owner,
-        GIT_COMMITTER_EMAIL: firstCommit?.authorEmail || `${owner}@users.noreply.github.com`,
-        GIT_COMMITTER_DATE: commit.date
-      };
-      console.log(`[v0] git commit -m "${commit.message}"`);
-      execSync(`git commit -m "${commit.message.replace(/"/g, '\\"')}"`, {
-        cwd: tempDir,
-        env: commitEnv,
-        encoding: "utf8",
-        stdio: "pipe"
-      });
-      
-      // Emit progress if we have emit
-      if (emit && totalSteps) {
-        emit("commits", `Created commit ${i+1}/${commits.length} in ${repo}`, i+1, totalSteps);
-      }
-      
-      console.log(`[v0] Committed ${i+1}/${commits.length} (${commit.date})`);
-    }
-
-    // Push to GitHub
-    console.log(`[v0] Adding remote origin and pushing...`);
-    const remoteUrl = `https://x-access-token:${token}@github.com/${owner}/${repo}.git`;
-    runCommand(`git remote add origin "${remoteUrl}"`, tempDir);
-    runCommand(`git branch -M ${branch}`, tempDir);
-    console.log(`[v0] git log --oneline -10`);
-    console.log(runCommand("git log --oneline -10", tempDir));
-    
-    console.log(`[v0] Running git push -u origin ${branch} --force`);
-    try {
-      const pushOutput = runCommand(`git push -u origin ${branch} --force`, tempDir);
-      console.log(`[v0] Push successful:`, pushOutput);
-    } catch (pushError) {
-      const err = pushError as any;
-      console.error(`[v0] Git push FAILED for repo ${repo}:`, err);
-      if (err.stderr) console.error(`[v0] Stderr:`, err.stderr);
-      if (err.stdout) console.error(`[v0] Stdout:`, err.stdout);
-      throw pushError;
-    }
-
-    console.log(`[v0] Successfully pushed ${commits.length} commits to ${owner}/${repo}`);
-    return commits.length;
-  } catch (error) {
-    console.error(`[v0] ERROR in pushCommitsWithLocalGit:`, error);
-    throw error;
-  } finally {
-    // Cleanup
-    try {
-      console.log(`[v0] Cleaning up temp dir: ${tempDir}`);
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    } catch (e) {
-      console.warn(`[v0] Cleanup failed:`, e);
-    }
-  }
-}
 
 export async function createRepo(
   token: string,
@@ -313,37 +161,24 @@ export async function createBranch(
   branch: string,
   fromBranch = "main"
 ) {
-  console.log(`[v0] createBranch called for repo=${repo}, branch=${branch}, fromBranch=${fromBranch}`);
   const octokit = createOctokit(token);
   
-  try {
-    // Get the SHA of the latest commit on the base branch
-    console.log(`[v0] Fetching ref heads/${fromBranch} from ${owner}/${repo}`);
-    const { data: refData } = await octokit.git.getRef({
-      owner,
-      repo,
-      ref: `heads/${fromBranch}`,
-    });
-    console.log(`[v0] Got ref data:`, refData);
-    
-    // Create the new branch
-    console.log(`[v0] Creating new branch refs/heads/${branch} from SHA: ${refData.object.sha}`);
-    const { data } = await octokit.git.createRef({
-      owner,
-      repo,
-      ref: `refs/heads/${branch}`,
-      sha: refData.object.sha,
-    });
-    console.log(`[v0] Created new branch successfully!`);
-    
-    return data;
-  } catch (err) {
-    const errMsg = err instanceof Error ? err.message : "Unknown error";
-    const fullErr = JSON.stringify(err, null, 2);
-    console.error(`[v0] createBranch failed!`, err);
-    console.error(`[v0] Full error details:`, fullErr);
-    throw new Error(`createBranch failed for repo ${repo}: ${errMsg}`);
-  }
+  // Get the SHA of the latest commit on the base branch
+  const { data: refData } = await octokit.git.getRef({
+    owner,
+    repo,
+    ref: `heads/${fromBranch}`,
+  });
+  
+  // Create the new branch
+  const { data } = await octokit.git.createRef({
+    owner,
+    repo,
+    ref: `refs/heads/${branch}`,
+    sha: refData.object.sha,
+  });
+  
+  return data;
 }
 
 export async function createPullRequest(
