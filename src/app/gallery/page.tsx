@@ -10,12 +10,20 @@ export const dynamic = "force-dynamic";
 
 async function getPolishes() {
   try {
-    return await db.polish.findMany({
+    const polishes = await db.polish.findMany({
       where: { status: "COMPLETED", isPublic: true },
       include: { user: true },
       orderBy: { completedAt: "desc" },
-      take: 24,
     });
+    
+    // Group by user and only keep the latest polish per user
+    const userPolishes = new Map();
+    for (const polish of polishes) {
+      if (!userPolishes.has(polish.userId)) {
+        userPolishes.set(polish.userId, polish);
+      }
+    }
+    return Array.from(userPolishes.values()).slice(0, 24);
   } catch {
     return [];
   }

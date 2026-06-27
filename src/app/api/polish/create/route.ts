@@ -113,6 +113,7 @@ export async function POST(req: Request) {
             email: intake.email,
             avatar: intake.avatar,
             templateName: intake.theme,
+            shareToken: `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
           },
         });
 
