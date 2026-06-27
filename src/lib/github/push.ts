@@ -37,8 +37,9 @@ export async function pushCommitsWithLocalGit(
   emit?: (step: string, detail: string, progress: number, total: number) => void,
   totalSteps?: number
 ): Promise<number> {
-  const tempDir = path.join(process.cwd(), `gitglow-${repo}-${Date.now()}`);
+  const tempDir = path.join(os.tmpdir(), `gitglow-${repo}-${Date.now()}`);
   console.log(`[v0] Using temp dir: ${tempDir}`);
+  console.log(`[v0] os.tmpdir() is: ${os.tmpdir()}`);
   
   try {
     // Cleanup if already exists
