@@ -311,6 +311,9 @@ export async function POST(req: Request) {
           });
         }
 
+        console.log(`[v0] Committer info:`, committer);
+        console.log(`[v0] Repos to push:`, Array.from(commitsByRepo.keys()));
+
         // For each repo, use local git to push commits
         let repoIndex = 0;
         const totalRepos = commitsByRepo.size;
