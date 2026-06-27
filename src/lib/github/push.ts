@@ -1,4 +1,83 @@
 import { createOctokit } from "./client";
+import { execSync } from "child_process";
+import fs from "fs";
+import path from "path";
+import os from "os";
+
+// Helper to run shell commands
+function runCommand(cmd: string, cwd: string) {
+  return execSync(cmd, { cwd, encoding: "utf8", stdio: "pipe" });
+}
+
+// New: Push commits using local git repo (more reliable for backdating)
+export async function pushCommitsWithLocalGit(
+  token: string,
+  owner: string,
+  repo: string,
+  commits: Array<{
+    path: string;
+    content: string;
+    message: string;
+    authorName: string;
+    authorEmail: string;
+    date: string; // ISO date string
+  }>,
+  branch: string = "main"
+) {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "gitglow-"));
+  console.log(`[v0] Using temp dir for ${repo}:`, tempDir);
+
+  try {
+    // Initialize repo
+    runCommand(`git init`, tempDir);
+    runCommand(`git config user.name "${owner}"`, tempDir);
+    runCommand(`git config user.email "${owner}@users.noreply.github.com"`, tempDir);
+
+    // Create all commits
+    for (const commit of commits) {
+      const filePath = path.join(tempDir, commit.path);
+      const dirPath = path.dirname(filePath);
+      
+      // Create directory if needed
+      fs.mkdirSync(dirPath, { recursive: true });
+      fs.writeFileSync(filePath, commit.content, "utf-8");
+
+      // Stage file
+      runCommand(`git add "${commit.path}"`, tempDir);
+
+      // Commit with proper date
+      // Set GIT_AUTHOR_DATE and GIT_COMMITTER_DATE for proper backdating
+      const commitEnv = {
+        ...process.env,
+        GIT_AUTHOR_DATE: commit.date,
+        GIT_COMMITTER_DATE: commit.date
+      };
+      
+      execSync(`git commit -m "${commit.message.replace(/"/g, '\\"')}"`, {
+        cwd: tempDir,
+        env: commitEnv,
+        encoding: "utf8"
+      });
+      
+      console.log(`[v0] Created commit in temp repo: ${commit.message} (date: ${commit.date})`);
+    }
+
+    // Push to GitHub
+    const remoteUrl = `https://x-access-token:${token}@github.com/${owner}/${repo}.git`;
+    runCommand(`git remote add origin "${remoteUrl}"`, tempDir);
+    runCommand(`git branch -M ${branch}`, tempDir);
+    runCommand(`git push -u origin ${branch} --force`, tempDir);
+
+    console.log(`[v0] Successfully pushed ${commits.length} commits to ${owner}/${repo}`);
+  } finally {
+    // Cleanup temp dir
+    try {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    } catch (e) {
+      console.warn(`[v0] Failed to cleanup temp dir ${tempDir}`, e);
+    }
+  }
+}
 
 export async function createRepo(
   token: string,

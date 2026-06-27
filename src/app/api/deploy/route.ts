@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { createRepo, pushFile, updateProfile, setRepoTopics, repoExists, createBranch, createPullRequest, mergePullRequest, deleteBranch, deleteRepo, enableBranchProtection } from "@/lib/github/push";
+import { createRepo, pushFile, updateProfile, setRepoTopics, repoExists, createBranch, createPullRequest, mergePullRequest, deleteBranch, deleteRepo, enableBranchProtection, pushCommitsWithLocalGit } from "@/lib/github/push";
 import { validateTokenScopes, checkScopesForDeploy } from "@/lib/github/validate";
 import type { GeneratedProject, CommitPlan } from "@/types/polish";
 import { generateExecutionScript, generateSummary } from "@/lib/scripts/orchestrator";
@@ -295,32 +295,47 @@ export async function POST(req: Request) {
         }
         
         emit("commits", `Pushing ${commitPlanToUse.length} contribution commits...`, 4, total);
+        const maxCommitsToPush = scriptBased ? 150 : 100; // Allow up to 150 commits for script-based
         let pushed = 0;
         let failed = 0;
-        const maxCommitsToPush = scriptBased ? 150 : 100; // Allow up to 150 commits for script-based (reduced from 400)
+
+        // Group commits by repo for local git approach
+        const commitsByRepo = new Map<string, Array<{path: string, content: string, message: string, date: string}>>();
         for (const commit of commitPlanToUse.slice(0, maxCommitsToPush)) {
+          if (!commitsByRepo.has(commit.repo)) commitsByRepo.set(commit.repo, []);
+          commitsByRepo.get(commit.repo)!.push({
+            path: commit.path,
+            content: commit.content,
+            message: commit.message,
+            date: commit.date
+          });
+        }
+
+        // For each repo, use local git to push commits
+        for (const [repoName, repoCommits] of commitsByRepo.entries()) {
           try {
-            await pushFile(
+            // Sort commits in chronological order (oldest first)
+            const sortedCommits = [...repoCommits].sort((a, b) => 
+              new Date(a.date).getTime() - new Date(b.date).getTime()
+            );
+
+            await pushCommitsWithLocalGit(
               token,
               owner,
-              commit.repo,
-              commit.path,
-              commit.content,
-              commit.message,
-              "main",
-              commit.author || committer, // Use commit-specific author if available
-              commit.date // Pass the date for proper commit distribution
+              repoName,
+              sortedCommits.map(commit => ({
+                ...commit,
+                authorName: committer.name,
+                authorEmail: committer.email
+              })),
+              "main"
             );
-            pushed++;
-            if (pushed % 10 === 0) {
-              emit("commits", `${pushed}/${Math.min(maxCommitsToPush, commitPlanToUse.length)} commits pushed...`, 4, total);
-            }
-            await new Promise((r) => setTimeout(r, 200));
-          } catch (commitErr) {
-            failed++;
-            const msg = commitErr instanceof Error ? commitErr.message : "Unknown error";
-            console.warn(`[v0] Commit ${pushed + failed} failed: ${msg}`);
-            // Continue with next commit even if one fails
+            
+            pushed += repoCommits.length;
+            emit("commits", `${pushed}/${Math.min(maxCommitsToPush, commitPlanToUse.length)} commits pushed...`, 4, total);
+          } catch (repoErr) {
+            console.error(`[v0] Failed to push commits to ${repoName}:`, repoErr);
+            failed += repoCommits.length;
           }
         }
         if (failed > 0) {
