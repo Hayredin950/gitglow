@@ -193,19 +193,46 @@ export function generateCommitDates(baseDate: Date, count: number): Date[] {
   const now = baseDate;
   const usedDateKeys = new Map<string, number>(); // Track date -> commit count
 
-  // Calculate distribution across 3 years (1095 days)
-  const totalDays = 1095;
-  const commitsPerDay = count / totalDays; // Average commits per day
+  // Calculate distribution across 1 year (365 days) - more realistic
+  const totalDays = 365;
   
-  // We want to spread commits across the entire 3-year period
-  // Use a weighted distribution to make it look natural
-  const daysSpread = Math.min(count, 365); // At most one commit per day for most days
+  // Ensure we spread commits across different months
+  const targetDays = Math.max(Math.floor(count / 2), Math.min(count, 100)); // At least 1 commit every other day on average
   
-  // Generate random days across the 3-year period
+  // Generate days with better distribution
   const selectedDays = new Set<number>();
-  while (selectedDays.size < Math.min(count, daysSpread)) {
+  
+  // First, ensure we have commits in different months
+  const months = new Set<number>();
+  let attempts = 0;
+  
+  while (selectedDays.size < targetDays && attempts < 10000) {
     const daysAgo = Math.floor(Math.random() * totalDays);
+    const candidateDate = new Date(now);
+    candidateDate.setDate(candidateDate.getDate() - daysAgo);
+    
+    // Skip weekends sometimes, but not always
+    const dayOfWeek = candidateDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      if (Math.random() > 0.3) { // 30% chance for weekend commits
+        attempts++;
+        continue;
+      }
+    }
+    
     selectedDays.add(daysAgo);
+    months.add(candidateDate.getMonth());
+    attempts++;
+  }
+  
+  // If we don't have enough months, add some more
+  while (months.size < 6 && selectedDays.size < targetDays) {
+    const randomMonth = Math.floor(Math.random() * 12);
+    const daysAgo = Math.floor(Math.random() * 30) + (randomMonth * 30);
+    if (daysAgo < totalDays) {
+      selectedDays.add(daysAgo);
+      months.add(randomMonth);
+    }
   }
   
   // Convert days ago to actual dates
@@ -216,14 +243,6 @@ export function generateCommitDates(baseDate: Date, count: number): Date[] {
     
     const candidateDate = new Date(now);
     candidateDate.setDate(candidateDate.getDate() - daysAgo);
-    
-    // Skip weekends (most of the time)
-    const dayOfWeek = candidateDate.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-      if (Math.random() > 0.2) { // 20% chance for weekend commits
-        return;
-      }
-    }
     
     // Check if we already have commits on this day
     const dateKey = candidateDate.toISOString().split('T')[0];
@@ -249,8 +268,8 @@ export function generateCommitDates(baseDate: Date, count: number): Date[] {
     const existingDate = dates[randomIndex];
     
     const newDate = new Date(existingDate);
-    // Add a small time offset (1-30 minutes)
-    newDate.setMinutes(newDate.getMinutes() + Math.floor(Math.random() * 30) + 1);
+    // Add a small time offset (1-60 minutes)
+    newDate.setMinutes(newDate.getMinutes() + Math.floor(Math.random() * 60) + 1);
     
     dates.push(newDate);
   }

@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import type { UserIntake } from "@/types/polish";
 import { generateScriptBasedProfile } from "@/lib/scripts/orchestrator";
 import { PolishStatus } from "@/generated/prisma";
+import { getProfile, getRepositories, hasProfileReadme } from "@/lib/github/profile";
+import { calculatePolishScore } from "@/lib/analysis/scorer";
 
 export const dynamic = 'force-dynamic';
 
@@ -66,17 +68,34 @@ export async function POST(req: Request) {
       templatesCount: intake.selectedTemplates.length,
     });
 
+    // Get DB user for GitHub access
+    const dbUser = await db.user.findUnique({
+      where: { id: userId },
+      select: { githubToken: true, username: true, email: true, avatar: true, name: true }
+    });
+
+    if (!dbUser?.githubToken || !dbUser.username) {
+      return Response.json({ error: "GitHub account not connected" }, { status: 400 });
+    }
+
+    // Run analysis to get scoreBefore
+    let scoreBefore = 0;
+    try {
+      const [profile, repos, hasReadme] = await Promise.all([
+        getProfile(dbUser.githubToken, dbUser.username),
+        getRepositories(dbUser.githubToken, dbUser.username),
+        hasProfileReadme(dbUser.githubToken, dbUser.username),
+      ]);
+      const approxContribs = repos.length * 8;
+      const score = calculatePolishScore(profile, repos, hasReadme, approxContribs);
+      scoreBefore = score.total;
+    } catch (analyzeErr) {
+      console.warn("[v0] Failed to analyze profile for scoreBefore, using default 0", analyzeErr);
+    }
+
     // Generate script-based profile
     const sessionUser = session.user as { username?: string; id: string };
-    // Prefer session username; fall back to DB lookup so we never use the raw userId
-    let githubLogin = sessionUser.username;
-    if (!githubLogin) {
-      const dbUser = await db.user.findUnique({ where: { id: userId }, select: { username: true } });
-      githubLogin = dbUser?.username ?? undefined;
-    }
-    if (!githubLogin) {
-      return Response.json({ error: "Could not determine GitHub username. Please sign out and sign in again." }, { status: 400 });
-    }
+    let githubLogin = sessionUser.username || dbUser.username;
     const githubProfile = {
       login: githubLogin,
       id: userId,
@@ -85,13 +104,17 @@ export async function POST(req: Request) {
     const scriptResult = generateScriptBasedProfile(githubProfile, intake);
     
     const polish = await db.polish.create({
-      data: {
-        userId,
-        userIntake: intake as object,
-        status: scriptResult.success ? PolishStatus.READY : PolishStatus.FAILED,
-        scriptResult: scriptResult as object,
-      },
-    });
+          data: {
+            userId,
+            userIntake: intake as object,
+            status: scriptResult.success ? PolishStatus.READY : PolishStatus.FAILED,
+            scriptResult: scriptResult as object,
+            scoreBefore,
+            email: intake.email,
+            avatar: intake.avatar,
+            templateName: intake.theme,
+          },
+        });
 
     console.log("[v0] Polish created successfully:", polish.id);
     return Response.json({ 
