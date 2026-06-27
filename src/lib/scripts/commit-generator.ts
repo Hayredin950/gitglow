@@ -178,14 +178,17 @@ export function generateCommitPlan(templateName: string, count: number = 20, use
   const dates = generateCommitDates(new Date(), count);
   const repoName = `${templateName}-1`;
   
-  return commits.map((commit, index) => ({
-    repo: repoName,
-    date: dates[index].toISOString(),
-    path: `.gitkeep-${index}`,
-    content: `# Commit ${index + 1}\n\nGenerated contribution commit for ${templateName}.`,
-    message: commit.message,
-    author: username && email ? { name: username, email } : undefined,
-  }));
+  return commits.map((commit, index) => {
+    const uniqueId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    return {
+      repo: repoName,
+      date: dates[index].toISOString(),
+      path: `gitglow_contributions/commit_${index}_${uniqueId}.md`,
+      content: `# Commit ${index + 1}\n\nGenerated contribution commit for ${templateName}.`,
+      message: commit.message,
+      author: username && email ? { name: username, email } : undefined,
+    };
+  });
 }
 
 export function generateCommitDates(baseDate: Date, count: number): Date[] {
