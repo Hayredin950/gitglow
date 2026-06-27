@@ -24,7 +24,9 @@ export async function pushCommitsWithLocalGit(
   }>,
   branch: string = "main"
 ) {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "gitglow-"));
+  // Create temp dir in current working dir (Vercel /tmp might be read-only)
+  const tempDir = path.join(process.cwd(), "gitglow-tmp-repo-" + Date.now() + "-" + Math.random().toString(36).substring(2, 8));
+  fs.mkdirSync(tempDir, { recursive: true });
   console.log(`[v0] Using temp dir for ${repo}:`, tempDir);
 
   try {
