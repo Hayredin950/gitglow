@@ -24,6 +24,7 @@ export async function pushCommitsWithLocalGit(
   }>,
   branch: string = "main"
 ) {
+  console.log(`[v0] Starting pushCommitsWithLocalGit for repo ${repo}, ${commits.length} commits`);
   // Create temp dir in current working dir (Vercel /tmp might be read-only)
   const tempDir = path.join(process.cwd(), "gitglow-tmp-repo-" + Date.now() + "-" + Math.random().toString(36).substring(2, 8));
   fs.mkdirSync(tempDir, { recursive: true });
@@ -31,20 +32,27 @@ export async function pushCommitsWithLocalGit(
 
   try {
     // Initialize repo
+    console.log(`[v0] Initializing git repo in ${tempDir}`);
     runCommand(`git init`, tempDir);
+    console.log(`[v0] Setting git config: user.name=${owner}, user.email=${owner}@users.noreply.github.com`);
     runCommand(`git config user.name "${owner}"`, tempDir);
     runCommand(`git config user.email "${owner}@users.noreply.github.com"`, tempDir);
 
     // Create all commits
-    for (const commit of commits) {
+    for (let i = 0; i < commits.length; i++) {
+      const commit = commits[i];
+      console.log(`[v0] Processing commit ${i + 1}/${commits.length}: date=${commit.date}`);
       const filePath = path.join(tempDir, commit.path);
       const dirPath = path.dirname(filePath);
       
       // Create directory if needed
+      console.log(`[v0] Creating directory ${dirPath} if needed`);
       fs.mkdirSync(dirPath, { recursive: true });
+      console.log(`[v0] Writing file ${filePath}`);
       fs.writeFileSync(filePath, commit.content, "utf-8");
 
       // Stage file
+      console.log(`[v0] Staging file ${commit.path}`);
       runCommand(`git add "${commit.path}"`, tempDir);
 
       // Commit with proper date
@@ -54,26 +62,34 @@ export async function pushCommitsWithLocalGit(
         GIT_AUTHOR_DATE: commit.date,
         GIT_COMMITTER_DATE: commit.date
       };
-      
+      console.log(`[v0] Committing with message: "${commit.message}" and date: ${commit.date}`);
       execSync(`git commit -m "${commit.message.replace(/"/g, '\\"')}"`, {
         cwd: tempDir,
         env: commitEnv,
-        encoding: "utf8"
+        encoding: "utf8",
+        stdio: "pipe"
       });
       
       console.log(`[v0] Created commit in temp repo: ${commit.message} (date: ${commit.date})`);
     }
 
     // Push to GitHub
+    console.log(`[v0] Adding remote origin for ${repo}`);
     const remoteUrl = `https://x-access-token:${token}@github.com/${owner}/${repo}.git`;
     runCommand(`git remote add origin "${remoteUrl}"`, tempDir);
+    console.log(`[v0] Renaming branch to ${branch}`);
     runCommand(`git branch -M ${branch}`, tempDir);
+    console.log(`[v0] Pushing to origin ${branch} --force`);
     runCommand(`git push -u origin ${branch} --force`, tempDir);
 
     console.log(`[v0] Successfully pushed ${commits.length} commits to ${owner}/${repo}`);
+  } catch (error) {
+    console.error(`[v0] ERROR in pushCommitsWithLocalGit for repo ${repo}:`, error);
+    throw error;
   } finally {
     // Cleanup temp dir
     try {
+      console.log(`[v0] Cleaning up temp dir ${tempDir}`);
       fs.rmSync(tempDir, { recursive: true, force: true });
     } catch (e) {
       console.warn(`[v0] Failed to cleanup temp dir ${tempDir}`, e);

@@ -312,7 +312,11 @@ export async function POST(req: Request) {
         }
 
         // For each repo, use local git to push commits
+        let repoIndex = 0;
+        const totalRepos = commitsByRepo.size;
         for (const [repoName, repoCommits] of commitsByRepo.entries()) {
+          repoIndex++;
+          emit("commits", `Pushing to ${repoName} (${repoIndex}/${totalRepos})...`, 4, total);
           try {
             // Sort commits in chronological order (oldest first)
             const sortedCommits = [...repoCommits].sort((a, b) => 
@@ -335,6 +339,7 @@ export async function POST(req: Request) {
             emit("commits", `${pushed}/${Math.min(maxCommitsToPush, commitPlanToUse.length)} commits pushed...`, 4, total);
           } catch (repoErr) {
             console.error(`[v0] Failed to push commits to ${repoName}:`, repoErr);
+            emit("commits", `⚠️ Failed to push to ${repoName}...`, 4, total);
             failed += repoCommits.length;
           }
         }
@@ -349,13 +354,13 @@ export async function POST(req: Request) {
           try {
             const tempRepoName = `gitglow-badge-helper-${Date.now()}`;
             await createRepo(token, tempRepoName, "GitGlow Badge Helper", false);
-            await new Promise((r) => setTimeout(r, 3000)); // Wait a bit for repo to be ready
+            await new Promise((r) => setTimeout(r, 1000)); // Shorter delay
 
             // Initialize repo with README
             await pushFile(token, owner, tempRepoName, "README.md", "# GitGlow Badge Helper\n\nThis repo helps earn GitHub achievement badges!\n\n## Badges Being Earned\n- **YOLO**: Merged PRs without review\n- **Pull Shark**: Created 20+ PRs for Lv1\n- **Quickdraw**: Merged PRs quickly after creation\n", "feat: initialize badge helper", "main", committer, undefined);
-            await new Promise((r) => setTimeout(r, 2000));
+            await new Promise((r) => setTimeout(r, 800)); // Shorter
 
-            // Create 20 PRs and merge them immediately for badges (Pull Shark Lv1 needs 16, we do 20 to be safe!)
+            // Create 20 PRs and merge them immediately for badges
             for (let i = 1; i <= 20; i++) {
               const branchName = `gitglow-badge-${i}`;
               const badgeContent = `# GitGlow Badge Automation PR #${i}\n\nThis PR helps earn GitHub achievement badges!\n\n## Badges Being Earned\n- **YOLO**: Merged without review\n- **Pull Shark**: Part of 20+ PRs for Lv1\n- **Quickdraw**: Merged quickly\n\nPR Number: ${i}\nCreated: ${new Date().toISOString()}\n`;
@@ -363,11 +368,11 @@ export async function POST(req: Request) {
               // Create branch
               await createBranch(token, owner, tempRepoName, branchName, "main");
               emit("badges", `Created branch ${branchName} (${i}/20)...`, 5, total);
-              await new Promise((r) => setTimeout(r, 1000));
+              await new Promise((r) => setTimeout(r, 400)); // Much shorter
               
-              // Add file to branch with unique name to avoid issues
+              // Add file to branch with unique name
               await pushFile(token, owner, tempRepoName, `gitglow_pr_${i}_${Date.now()}.md`, badgeContent, `feat: gitglow badge PR #${i}`, branchName, committer, undefined);
-              await new Promise((r) => setTimeout(r, 1500));
+              await new Promise((r) => setTimeout(r, 400)); 
               
               // Create PR
               const pr = await createPullRequest(
@@ -380,24 +385,23 @@ export async function POST(req: Request) {
                 "main"
               );
               emit("badges", `Created PR #${pr.number} (${i}/20)...`, 5, total);
-              await new Promise((r) => setTimeout(r, 2000));
+              await new Promise((r) => setTimeout(r, 600)); 
               
-              // Merge PR immediately for YOLO and Quickdraw badges (without review!)
+              // Merge PR immediately
               await mergePullRequest(token, owner, tempRepoName, pr.number);
-              emit("badges", `Merged PR #${pr.number} - YOLO/Quickdraw triggered! (${i}/20)...`, 5, total);
+              emit("badges", `Merged PR #${pr.number} (${i}/20)...`, 5, total);
               
-              // Delete branch after merge
+              // Delete branch
               await deleteBranch(token, owner, tempRepoName, branchName);
               
-              await new Promise((r) => setTimeout(r, 1500));
+              await new Promise((r) => setTimeout(r, 300)); 
             }
             
-            // DON'T delete the temp repo - GitHub needs it to process the PRs for badges! Keep it forever!
-            emit("badges", `✅ Badge automation complete! Created and merged 20 PRs! Keep repo: https://github.com/${owner}/${tempRepoName}`, 5, total);
+            // DON'T delete temp repo
+            emit("badges", `✅ Badge automation complete! Keep repo: https://github.com/${owner}/${tempRepoName}`, 5, total);
           } catch (badgeErr) {
-            const msg = badgeErr instanceof Error ? badgeErr.message : "Unknown error";
-            console.warn("[v0] Badge automation failed:", badgeErr);
-            emit("badges", `⚠️ Badge automation had an issue: ${msg}. Try manual PRs if needed.`, 5, total);
+            console.error("[v0] Badge automation failed:", badgeErr);
+            emit("badges", `⚠️ Badge automation issue: ${badgeErr instanceof Error ? badgeErr.message : "Unknown error"}`, 5, total);
           }
         }
 
