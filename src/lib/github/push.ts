@@ -55,8 +55,6 @@ export async function pushCommitsWithLocalGit(
     console.log(`[v0] Setting git config user.name="${gitUserName}", user.email="${gitUserEmail}"`);
     runCommand(`git config user.name "${gitUserName}"`, tempDir);
     runCommand(`git config user.email "${gitUserEmail}"`, tempDir);
-    // Set credential helper to store token temporarily
-    runCommand(`git config credential.helper '!f() { sleep 1; echo "username=${owner}"; echo "password=${token}"; }; f'`, tempDir);
     console.log(`[v0] Git config list:`, runCommand("git config --list", tempDir));
 
     // Calculate and emit date range

@@ -327,6 +327,7 @@ export async function POST(req: Request) {
               new Date(a.date).getTime() - new Date(b.date).getTime()
             );
 
+            console.log(`[v0] Starting push to ${repoName} with ${sortedCommits.length} commits`);
             await pushCommitsWithLocalGit(
               token,
               owner,
@@ -344,8 +345,11 @@ export async function POST(req: Request) {
             pushed += repoCommits.length;
             emit("commits", `${pushed}/${Math.min(maxCommitsToPush, commitPlanToUse.length)} commits pushed...`, 4, total);
           } catch (repoErr) {
-            console.error(`[v0] Failed to push commits to ${repoName}:`, repoErr);
-            emit("commits", `⚠️ Failed to push to ${repoName}...`, 4, total);
+            const errorMsg = repoErr instanceof Error ? repoErr.message : "Unknown error";
+            const stack = repoErr instanceof Error ? repoErr.stack : "";
+            console.error(`[v0] Failed to push to ${repoName}:`, repoErr);
+            console.error(`[v0] Stack trace:`, stack);
+            emit("commits", `⚠️ Failed to push to ${repoName}: ${errorMsg}`, 4, total);
             failed += repoCommits.length;
           }
         }
@@ -359,26 +363,30 @@ export async function POST(req: Request) {
           emit("badges", "Earning GitHub achievement badges (YOLO, Pull Shark, Quickdraw)...", 5, total);
           try {
             const tempRepoName = `gitglow-badge-helper-${Date.now()}`;
+            console.log(`[v0] Creating temp repo: ${tempRepoName}`);
             await createRepo(token, tempRepoName, "GitGlow Badge Helper", false);
-            await new Promise((r) => setTimeout(r, 1000)); // Shorter delay
+            await new Promise((r) => setTimeout(r, 2000)); // Wait a bit more for GitHub to process repo
 
-            // Initialize repo with README
+            // Initialize repo with README AND push initial commit to main
+            console.log(`[v0] Pushing initial README to temp repo`);
             await pushFile(token, owner, tempRepoName, "README.md", "# GitGlow Badge Helper\n\nThis repo helps earn GitHub achievement badges!\n\n## Badges Being Earned\n- **YOLO**: Merged PRs without review\n- **Pull Shark**: Created 15+ PRs for Lv1\n- **Quickdraw**: Merged PRs quickly after creation\n", "feat: initialize badge helper", "main", committer, undefined);
-            await new Promise((r) => setTimeout(r, 800)); // Shorter
+            console.log(`[v0] Initial README pushed successfully!`);
+            await new Promise((r) => setTimeout(r, 1000));
 
             // Create 15 PRs and merge them immediately for badges
             for (let i = 1; i <= 15; i++) {
+              console.log(`[v0] Starting PR ${i}/15`);
               const branchName = `gitglow-badge-${i}`;
               const badgeContent = `# GitGlow Badge Automation PR #${i}\n\nThis PR helps earn GitHub achievement badges!\n\n## Badges Being Earned\n- **YOLO**: Merged without review\n- **Pull Shark**: Part of 15+ PRs for Lv1\n- **Quickdraw**: Merged quickly\n\nPR Number: ${i}\nCreated: ${new Date().toISOString()}\n`;
               
               // Create branch
               await createBranch(token, owner, tempRepoName, branchName, "main");
               emit("badges", `Created branch ${branchName} (${i}/15)...`, 5, total);
-              await new Promise((r) => setTimeout(r, 400)); // Much shorter
+              await new Promise((r) => setTimeout(r, 500)); 
               
               // Add file to branch with unique name
               await pushFile(token, owner, tempRepoName, `gitglow_pr_${i}_${Date.now()}.md`, badgeContent, `feat: gitglow badge PR #${i}`, branchName, committer, undefined);
-              await new Promise((r) => setTimeout(r, 400)); 
+              await new Promise((r) => setTimeout(r, 500)); 
               
               // Create PR
               const pr = await createPullRequest(
@@ -391,7 +399,7 @@ export async function POST(req: Request) {
                 "main"
               );
               emit("badges", `Created PR #${pr.number} (${i}/15)...`, 5, total);
-              await new Promise((r) => setTimeout(r, 600)); 
+              await new Promise((r) => setTimeout(r, 700)); 
               
               // Merge PR immediately
               await mergePullRequest(token, owner, tempRepoName, pr.number);
