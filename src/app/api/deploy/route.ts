@@ -60,12 +60,12 @@ export async function POST(req: Request) {
         // Calculate total steps based on approach
         let total = 5;
         if (scriptBased && selectedTemplates) {
-          total = 5 + selectedTemplates.length; // Additional steps for each template
+          total = 5 + selectedTemplates.length + 150; // Additional steps for each template and 150 commits
         }
         if (dreamRepos && dreamRepos.length > 0) {
           total += dreamRepos.length;
         }
-        if (earnBadges) total += 1;
+        if (earnBadges) total += 20; // 20 PRs for badges
 
         // Validate token scopes before starting
         emit("validate", "Validating GitHub token permissions...", 0, total);
@@ -332,7 +332,9 @@ export async function POST(req: Request) {
                 authorName: committer?.name ?? owner,
                 authorEmail: committer?.email ?? `${owner}@users.noreply.github.com`
               })),
-              "main"
+              "main",
+              emit,
+              total
             );
             
             pushed += repoCommits.length;

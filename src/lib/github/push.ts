@@ -6,6 +6,7 @@ import os from "os";
 
 // Helper to run shell commands
 function runCommand(cmd: string, cwd: string) {
+  console.log(`[v0] RUN: ${cmd} (in ${cwd})`);
   return execSync(cmd, { cwd, encoding: "utf8", stdio: "pipe" });
 }
 
@@ -22,47 +23,59 @@ export async function pushCommitsWithLocalGit(
     authorEmail: string;
     date: string; // ISO date string
   }>,
-  branch: string = "main"
-) {
-  console.log(`[v0] Starting pushCommitsWithLocalGit for repo ${repo}, ${commits.length} commits`);
-  // Create temp dir in current working dir (Vercel /tmp might be read-only)
-  const tempDir = path.join(process.cwd(), "gitglow-tmp-repo-" + Date.now() + "-" + Math.random().toString(36).substring(2, 8));
-  fs.mkdirSync(tempDir, { recursive: true });
-  console.log(`[v0] Using temp dir for ${repo}:`, tempDir);
-
+  branch: string = "main",
+  emit?: (step: string, detail: string, progress: number, total: number) => void,
+  totalSteps?: number
+): Promise<number> {
+  const tempDir = path.join(process.cwd(), `gitglow-${repo}-${Date.now()}`);
+  console.log(`[v0] Using temp dir: ${tempDir}`);
+  
   try {
+    // Cleanup if already exists
+    try { fs.rmSync(tempDir, { recursive: true, force: true }); } catch (e) {}
+    
     // Initialize repo
-    console.log(`[v0] Initializing git repo in ${tempDir}`);
-    runCommand(`git init`, tempDir);
-    console.log(`[v0] Setting git config: user.name=${owner}, user.email=${owner}@users.noreply.github.com`);
-    runCommand(`git config user.name "${owner}"`, tempDir);
-    runCommand(`git config user.email "${owner}@users.noreply.github.com"`, tempDir);
+    console.log(`[v0] git init`);
+    runCommand("git init", tempDir);
+    const firstCommit = commits[0];
+    const gitUserName = firstCommit?.authorName || owner;
+    const gitUserEmail = firstCommit?.authorEmail || `${owner}@users.noreply.github.com`;
+    runCommand(`git config user.name "${gitUserName}"`, tempDir);
+    runCommand(`git config user.email "${gitUserEmail}"`, tempDir);
 
-    // Create all commits
+    // Calculate and emit date range
+    if (commits.length > 0) {
+      const sortedDates = [...commits].map(c => new Date(c.date)).sort((a,b) => a.getTime()-b.getTime());
+      const startDate = sortedDates[0];
+      const endDate = sortedDates[sortedDates.length - 1];
+      const dateRangeStr = `${startDate.getFullYear()}-${String(startDate.getMonth()+1).padStart(2,'0')}-${String(startDate.getDate()).padStart(2,'0')} → ${endDate.getFullYear()}-${String(endDate.getMonth()+1).padStart(2,'0')}-${String(endDate.getDate()).padStart(2,'0')}`;
+      console.log(`[v0] Commit date range: ${dateRangeStr}`);
+      if (emit && totalSteps) {
+        emit("commits", `Date range: ${dateRangeStr}`, 0, totalSteps);
+      }
+    }
+
+    // Create each commit
     for (let i = 0; i < commits.length; i++) {
       const commit = commits[i];
-      console.log(`[v0] Processing commit ${i + 1}/${commits.length}: date=${commit.date}`);
       const filePath = path.join(tempDir, commit.path);
       const dirPath = path.dirname(filePath);
       
       // Create directory if needed
-      console.log(`[v0] Creating directory ${dirPath} if needed`);
-      fs.mkdirSync(dirPath, { recursive: true });
-      console.log(`[v0] Writing file ${filePath}`);
+      try { fs.mkdirSync(dirPath, { recursive: true }); } catch (e) {}
+      
       fs.writeFileSync(filePath, commit.content, "utf-8");
 
-      // Stage file
-      console.log(`[v0] Staging file ${commit.path}`);
+      // Stage
       runCommand(`git add "${commit.path}"`, tempDir);
 
-      // Commit with proper date
-      // Set GIT_AUTHOR_DATE and GIT_COMMITTER_DATE for proper backdating
+      // Commit with date
       const commitEnv = {
         ...process.env,
         GIT_AUTHOR_DATE: commit.date,
         GIT_COMMITTER_DATE: commit.date
       };
-      console.log(`[v0] Committing with message: "${commit.message}" and date: ${commit.date}`);
+      
       execSync(`git commit -m "${commit.message.replace(/"/g, '\\"')}"`, {
         cwd: tempDir,
         env: commitEnv,
@@ -70,29 +83,36 @@ export async function pushCommitsWithLocalGit(
         stdio: "pipe"
       });
       
-      console.log(`[v0] Created commit in temp repo: ${commit.message} (date: ${commit.date})`);
+      // Emit progress if we have emit
+      if (emit && totalSteps) {
+        emit("commits", `Created commit ${i+1}/${commits.length} in ${repo}`, i+1, totalSteps);
+      }
+      
+      console.log(`[v0] Committed ${i+1}/${commits.length} (${commit.date})`);
     }
 
     // Push to GitHub
-    console.log(`[v0] Adding remote origin for ${repo}`);
+    console.log(`[v0] Adding remote origin and pushing...`);
     const remoteUrl = `https://x-access-token:${token}@github.com/${owner}/${repo}.git`;
     runCommand(`git remote add origin "${remoteUrl}"`, tempDir);
-    console.log(`[v0] Renaming branch to ${branch}`);
     runCommand(`git branch -M ${branch}`, tempDir);
-    console.log(`[v0] Pushing to origin ${branch} --force`);
-    runCommand(`git push -u origin ${branch} --force`, tempDir);
+    
+    console.log(`[v0] Running git push -u origin ${branch} --force`);
+    const pushOutput = runCommand(`git push -u origin ${branch} --force`, tempDir);
+    console.log(`[v0] Push successful:`, pushOutput);
 
     console.log(`[v0] Successfully pushed ${commits.length} commits to ${owner}/${repo}`);
+    return commits.length;
   } catch (error) {
-    console.error(`[v0] ERROR in pushCommitsWithLocalGit for repo ${repo}:`, error);
+    console.error(`[v0] ERROR in pushCommitsWithLocalGit:`, error);
     throw error;
   } finally {
-    // Cleanup temp dir
+    // Cleanup
     try {
-      console.log(`[v0] Cleaning up temp dir ${tempDir}`);
+      console.log(`[v0] Cleaning up temp dir: ${tempDir}`);
       fs.rmSync(tempDir, { recursive: true, force: true });
     } catch (e) {
-      console.warn(`[v0] Failed to cleanup temp dir ${tempDir}`, e);
+      console.warn(`[v0] Cleanup failed:`, e);
     }
   }
 }
